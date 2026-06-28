@@ -92,4 +92,4 @@ jobs:
           uv run bandit -r src
 
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
