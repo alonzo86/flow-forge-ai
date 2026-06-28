@@ -1,0 +1,17 @@
+# Example 2: Ollama instrumentation with SQLite database sink
+#
+# Install dependencies:
+#   pip install flow_forge_ai[ollama-instr]
+#
+# Requires a running Ollama server (https://ollama.com) with the llama3 model:
+#   ollama pull llama3
+
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.ollama_instr.OllamaInstrumentor"
+
+[[sinks]]
+name = "sqlite"
+class_path = "flow_forge_ai.sinks.database_sink.DatabaseSink"
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.sqlite_handler.SQLiteHandler"
+path = "./runs.db"

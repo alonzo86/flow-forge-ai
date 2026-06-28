@@ -1,0 +1,27 @@
+# Example 4: requests instrumentation with MongoDB database sink
+#
+# Install dependencies:
+#   pip install flow_forge_ai[mongodb-sink]
+#   pip install requests  # already a core dependency
+#
+# Requires a running MongoDB instance.
+# Default URI connects to localhost:27017 with no authentication.
+# Update `uri` below for authenticated or remote clusters:
+#   uri = "mongodb://user:password@host:27017/"
+#   uri = "mongodb+srv://user:password@cluster.mongodb.net/"
+
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.requests_instr.RequestsInstrumentor"
+[instrumentors.options]
+# Truncate large response bodies stored in trace events.
+max_body_bytes = 8192
+
+[[sinks]]
+name = "mongodb"
+class_path = "flow_forge_ai.sinks.database_sink.DatabaseSink"
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.mongodb_handler.MongoDBHandler"
+uri = "mongodb://localhost:27017/"
+database = "flow_forge_events"
+username = "env:EXAMPLE4_MONGODB_USERNAME"
+password = "env:EXAMPLE4_MONGODB_PASSWORD"

@@ -1,0 +1,35 @@
+[runtime]
+enable = true
+source_sink = "file log"
+listener_host = "127.0.0.1"  # optional, defaults to loopback
+listener_port = 7070          # set to enable cross-process replay requests from the UI
+
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.ollama_instr.OllamaInstrumentor"
+
+[[sinks]]
+name = "file log"
+class_path = "flow_forge_ai.sinks.file_sink.FileSink"
+
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.jsonl_handler.JsonlHandler"
+path = "./traces.jsonl"
+
+[[sinks]]
+name = "sqlite log"
+class_path = "flow_forge_ai.sinks.database_sink.DatabaseSink"
+
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.sqlite_handler.SQLiteHandler"
+url = "sqlite:///./runs.db"
+
+[[sinks]]
+name = "console log"
+class_path = "flow_forge_ai.sinks.console_sink.ConsoleSink"
+
+[[sinks]]
+name = "memory log"
+class_path = "flow_forge_ai.sinks.memory_sink.MemorySink"
+
+[sinks.options]
+max_events = 10000
