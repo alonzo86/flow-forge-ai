@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -31,7 +31,7 @@ jobs:
           uv run pytest --cov=. --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
 
@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -92,4 +92,4 @@ jobs:
           uv run bandit -r src
 
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
