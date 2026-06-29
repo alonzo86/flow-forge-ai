@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.mypy_cache
+
+# Virtual environments
+.venv
+
+# execution geneated files
+*.log
+traces.jsonl
+runs.db
+.DS_Store
+.coverage*
+coverage*.xml

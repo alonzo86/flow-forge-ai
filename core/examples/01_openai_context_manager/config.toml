@@ -1,0 +1,14 @@
+# Example 1: OpenAI instrumentation with file sink (JSONL)
+#
+# Install dependencies:
+#   pip install flow_forge_ai[openai-instr]
+
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.openai_instr.OpenAIInstrumentor"
+
+[[sinks]]
+name = "file log"
+class_path = "flow_forge_ai.sinks.file_sink.FileSink"
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.jsonl_handler.JsonlHandler"
+path = "./traces.jsonl"

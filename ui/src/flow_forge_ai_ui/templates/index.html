@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <script src="/static/js/dayjs.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #060d1a;
+            --surface:   #0d1b2a;
+            --surface-2: #112233;
+            --border:    #1e3a5f;
+            --border-hi: #2a4f7c;
+            --accent:    #3b82f6;
+            --accent-2:  #22d3ee;
+            --accent-dim: rgba(59,130,246,0.15);
+            --replay:    #f59e0b;
+            --replay-dim: rgba(245,158,11,0.15);
+            --replay-border: rgba(245,158,11,0.35);
+            --text:      #e2e8f0;
+            --muted:     #64748b;
+            --muted-hi:  #94a3b8;
+            --mono:      'JetBrains Mono', monospace;
+            --sans:      'Inter', sans-serif;
+            --radius:    10px;
+            --radius-lg: 16px;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Layout ─────────────────────────────────────── */
+        .app {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .app-header h1 {
+            font-family: var(--mono);
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text);
+        }
+
+        .app-header .tagline {
+            font-size: 0.8rem;
+            color: var(--muted);
+            flex: 1;
+        }
+
+        /* ── Replay button ────────────────────────────────── */
+        .replay-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-hi);
+            background: var(--surface-2);
+            color: var(--muted-hi);
+            font-family: var(--mono);
+            font-size: 0.73rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .replay-btn:hover {
+            background: var(--replay-dim);
+            border-color: var(--replay-border);
+            color: var(--replay);
+        }
+
+        .replay-btn.active {
+            background: var(--replay-dim);
+            border-color: var(--replay);
+            color: var(--replay);
+        }
+
+        .replay-btn svg {
+            flex-shrink: 0;
+        }
+
+        .replay-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 99px;
+            background: var(--replay-dim);
+            border: 1px solid var(--replay-border);
+            color: var(--replay);
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .replay-indicator.visible { display: flex; }
+
+        .replay-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--replay);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .app-body {
+            display: grid;
+            grid-template-columns: 1fr;
+            overflow: hidden;
+        }
+
+        .section-header .panel-caption-main {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted-hi);
+        }
+
+        .panel {
+            margin: 16px;
+        }
+
+        /* ── Run panel ──────────────────────────────────── */
+        .run-panel {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .run-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            padding: 0.5rem;
+        }
+
+        .run-list::-webkit-scrollbar { width: 4px; }
+        .run-list::-webkit-scrollbar-track { background: transparent; }
+        .run-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+        .run-card {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-radius: var(--radius);
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s, border-color 0.1s;
+            position: relative;
+        }
+
+        .run-card:hover {
+            background: var(--surface-2);
+            border-color: var(--border);
+        }
+
+        .run-card.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+
+        .run-card strong {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            font-weight: 500;
+            display: block;
+            color: var(--text);
+        }
+
+        .run-card small {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            color: var(--muted);
+            display: block;
+            margin-top: 0.1rem;
+        }
+
+        /* ── Main content ─────────────────────────────────── */
+        .content {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        .content-header {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .content-header h2 {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted-hi);
+        }
+
+        .content-header p {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.1rem;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: minmax(300px, max-content) minmax(400px, max-content) 1fr;
+            overflow: hidden;
+        }
+
+        /* ── Steps panel (replaces Event panel) ───────────── */
+        .event-panel {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 0.85rem 1rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .panel-header h3 {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted-hi);
+        }
+
+        .panel-caption {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .refresh-btn:hover {
+            background: var(--surface-2);
+            color: var(--muted-hi);
+        }
+
+        .refresh-btn.loading {
+            animation: spin 0.7s linear infinite;
+        }
+
+        /* ── Step list (accordion container) ─────────────── */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex: 1;
+            padding: 0.5rem;
+            gap: 3px;
+        }
+
+        .event-list::-webkit-scrollbar { width: 4px; }
+        .event-list::-webkit-scrollbar-track { background: transparent; }
+        .event-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+        /* ── Step row (accordion header) ──────────────────── */
+        .step-row {
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            transition: border-color 0.1s;
+        }
+
+        .step-row.active {
+            border-color: var(--border);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            width: 100%;
+            text-align: left;
+            padding: 0.55rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s;
+            border-radius: var(--radius);
+        }
+
+        .step-row.active > .step-header {
+            background: var(--surface-2);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .step-header:hover { background: var(--surface-2); }
+
+        .step-replay-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--replay);
+            box-shadow: 0 0 0 2px var(--replay-dim);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .step-chevron {
+            flex-shrink: 0;
+            color: var(--muted);
+            transition: transform 0.18s ease, color 0.15s;
+        }
+
+        .step-row.active .step-chevron {
+            transform: rotate(90deg);
+            color: var(--accent-2);
+        }
+
+        .step-badge {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-hi);
+            color: var(--muted-hi);
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        .step-row.active .step-badge {
+            background: rgba(34,211,238,0.1);
+            border-color: rgba(34,211,238,0.35);
+            color: var(--accent-2);
+        }
+
+        .step-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-info strong {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            font-weight: 500;
+            display: block;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .step-row.active .step-info strong { color: var(--accent-2); }
+
+        .step-info span {
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            color: var(--muted);
+            display: block;
+        }
+
+        /* ── Event sub-list ───────────────────────────────── */
+        .step-events {
+            display: none;
+            flex-direction: column;
+            gap: 1px;
+            padding: 0.3rem 0.4rem 0.4rem 0.4rem;
+            background: var(--surface-2);
+            border-top: 1px solid var(--border);
+        }
+
+        .step-row.active .step-events { display: flex; }
+
+        .event-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.45rem 0.65rem 0.45rem 1rem;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s, border-color 0.1s;
+            position: relative;
+        }
+
+        /* Left bar on events */
+        .event-item::before {
+            content: '';
+            position: absolute;
+            left: 0.4rem; top: 20%; bottom: 20%;
+            width: 2px;
+            background: var(--border-hi);
+            border-radius: 1px;
+            transition: background 0.15s, top 0.15s, bottom 0.15s;
+        }
+
+        .event-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+        .event-item:hover::before { background: var(--muted-hi); top: 10%; bottom: 10%; }
+
+        .event-item.active {
+            background: rgba(34,211,238,0.08);
+            border-color: rgba(34,211,238,0.3);
+        }
+
+        .event-item.active::before {
+            background: var(--accent-2);
+            top: 0; bottom: 0;
+        }
+
+        .event-item strong {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text);
+            display: block;
+        }
+
+        .event-item.active strong { color: var(--accent-2); }
+
+        .event-item span {
+            font-family: var(--mono);
+            font-size: 0.64rem;
+            color: var(--muted);
+            display: block;
+            margin-top: 0.05rem;
+        }
+
+        /* ── Detail panel ──────────────────────────────────── */
+        .detail-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem 1rem;
+        }
+
+        .detail-body::-webkit-scrollbar { width: 4px; }
+        .detail-body::-webkit-scrollbar-track { background: transparent; }
+        .detail-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+        .event-payload, .event-meta {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: #93c5fd;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* JSON syntax tinting */
+        .event-payload .key , .event-meta .key   { color: #7dd3fc; }
+        .event-payload .str , .event-meta .str   { color: #86efac; }
+        .event-payload .num , .event-meta .num   { color: #fda4af; }
+        .event-payload .bool, .event-meta .bool  { color: #f9a8d4; }
+        .event-payload .null, .event-meta .null  { color: var(--muted-hi); }
+
+        /* ── Meta / Payload sub-panels ────────────────────── */
+        .meta-panel, .payload-panel {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            min-height: 0;
+            transition: flex 0.2s ease;
+        }
+
+        .meta-panel { flex: 6; }
+        .payload-panel { flex: 10; }
+
+        .meta-panel.collapsed, .payload-panel.collapsed {
+            flex: 0 0 auto;
+        }
+
+        .meta-body, .payload-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem 1rem;
+            min-height: 80px;
+        }
+
+        .meta-panel.collapsed .meta-body,
+        .payload-panel.collapsed .payload-body {
+            display: none;
+        }
+
+        .meta-body::-webkit-scrollbar, .payload-body::-webkit-scrollbar { width: 4px; }
+        .meta-body::-webkit-scrollbar-track, .payload-body::-webkit-scrollbar-track { background: transparent; }
+        .meta-body::-webkit-scrollbar-thumb, .payload-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+        /* ── Collapsible panel header ─────────────────────── */
+        .panel-header.collapsible {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-header.collapsible:hover { background: var(--surface-2); }
+
+        .panel-collapse-chevron {
+            color: var(--muted);
+            flex-shrink: 0;
+            transition: transform 0.18s ease, color 0.15s;
+        }
+
+        .collapsed .panel-collapse-chevron {
+            transform: rotate(-90deg);
+        }
+
+        /* ── Empty / placeholder states ───────────────────── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            height: 100%;
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .empty-state svg { opacity: 0.25; margin-bottom: 0.25rem; }
+
+        /* ── Scrollbar global ─────────────────────────────── */
+        * { scrollbar-width: thin; scrollbar-color: var(--border-hi) transparent; }
+
+        /* ── Loading spinner ───────────────────────────────── */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-hi);
+            border-top-color: var(--accent-2);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .spinner-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--muted-hi);
+            font-size: 0.78rem;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            height: 100%;
+            padding: 2rem;
+        }
+
+        .loading-state .spinner { width: 22px; height: 22px; border-width: 3px; }
+
+        .loading-state span {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-family: var(--mono);
+        }
+
+        /* ── Toast ─────────────────────────────────────────── */
+        .toast-stack {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1000;
+            max-width: 360px;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            background: var(--surface);
+            border: 1px solid #7f1d1d;
+            border-left: 3px solid #f87171;
+            border-radius: var(--radius);
+            padding: 0.75rem 0.85rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+            animation: toast-in 0.18s ease-out;
+        }
+
+        .toast.toast-success {
+            border-color: rgba(34,197,94,0.4);
+            border-left-color: #4ade80;
+        }
+
+        .toast.toast-leaving { animation: toast-out 0.15s ease-in forwards; }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toast-out { to { opacity: 0; transform: translateX(8px); } }
+
+        .toast-icon { color: #f87171; flex-shrink: 0; margin-top: 0.05rem; }
+        .toast.toast-success .toast-icon { color: #4ade80; }
+
+        .toast-body { flex: 1; }
+
+        .toast-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.15rem;
+        }
+
+        .toast-message {
+            font-size: 0.76rem;
+            color: var(--muted-hi);
+            line-height: 1.5;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="app-header">
+        <h1>Run Analyzer</h1>
+        <span class="tagline">Browse workflow runs and inspect their steps.</span>
+
+        <div class="replay-indicator" id="replay-indicator">
+            <div class="replay-dot"></div>
+            REPLAY ON
+        </div>
+
+        <button class="replay-btn" id="replay-btn" type="button" title="Replay selected run">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="8 5 19 12 8 19 8 5"/>
+            </svg>
+            Replay
+        </button>
+    </header>
+
+    <div class="app-body">
+        <div class="split">
+            <!-- Sidebar: run list -->
+            <div class="run-panel">
+                <div class="panel-header">
+                    <div class="section-header">
+                        <span class="panel-caption-main">Runs</span>
+                        <button id="refresh-runs-btn" class="refresh-btn" type="button" title="Refresh runs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="run-list" class="run-list">
+                    {% if runs %}
+                        {% for run in runs %}
+                        <button class="run-card{% if loop.first %} active{% endif %}" type="button" data-run-id="{{ run.id }}">
+                            <strong>{{ run.id }}</strong>
+                            <small>{{ run.workflow_id }}</small>
+                            <small>{{ run.started_at | format_datetime }}</small>
+                        </button>
+                        {% endfor %}
+                    {% else %}
+                        <li class="empty-state">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h5M8 16h3"/></svg>
+                            No runs available yet.
+                        </li>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Steps list (accordion) -->
+            <div class="event-panel">
+                <div class="panel-header">
+                    <div class="section-header">
+                        <span class="panel-caption-main">Steps</span>
+                        <span class="panel-caption" id="event-panel-caption">
+                            {% if steps %}Showing {{ steps | length }} steps.{% else %}No run selected.{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div id="event-list" class="event-list">
+                    {% if steps %}
+                        {% set first_non_run_step = true %}
+                        {% for step in steps %}
+                            {% set step_events_list = step.events | list %}
+                            {% set is_active = step.id.startswith('run.start') %}
+                            {% if step.id.startswith('run') %}
+                                <!-- Run-level events (special case: no collapsible) -->
+                                <div class="step-row{% if is_active %} active{% endif %}" data-step-id="{{ step.id }}">
+                                    <button class="step-header" type="button">
+                                        <div class="step-info">
+                                            <strong>{% for part in step.id.split('.') %}{{ part[0]|upper }}{{ part[1:] }}{% if not loop.last %} {% endif %}{% endfor %}</strong>
+                                            <span>{{ step.started_at | format_datetime }}</span>
+                                        </div>
+                                    </button>
+                                    <div class="event-item" style="display: none;" data-event='{{ step_events_list[0] | tojson }}'></div>
+                                </div>
+                            {% else %}
+                                <!-- Regular step with events -->
+                                <div class="step-row" data-step-id="{{ step.id }}">
+                                    <button class="step-header" type="button">
+                                        <svg class="step-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"/>
+                                        </svg>
+                                        <span class="step-badge">#{{ step.id }}</span>
+                                        <div class="step-info">
+                                            <strong>Step {{ step.id }}</strong>
+                                            <span>{{ step.started_at | format_datetime }}</span>
+                                        </div>
+                                    </button>
+                                    <div class="step-events">
+                                        {% for event in step_events_list %}
+                                        <button class="event-item event-{{ event.type }}" type="button" data-event='{{ event | tojson }}'>
+                                            <strong>{% for part in event.type.split('.') %}{{ part[0]|upper }}{{ part[1:] }}{% if not loop.last %} {% endif %}{% endfor %}</strong>
+                                            <span>{{ event.id }}</span>
+                                            <span>{{ event.timestamp | format_datetime }}</span>
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                            No events for this run.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Event detail: metadata + payload -->
+            <div class="detail-panel">
+                <div class="panel-header">
+                    <div class="section-header">
+                        <span class="panel-caption-main">State</span>
+                        <span class="panel-caption" id="state-panel-caption"></span>
+                    </div>
+                </div>
+                <!-- Metadata sub-panel -->
+                <div class="meta-panel" id="meta-panel">
+                    <div class="panel-header collapsible" id="meta-panel-header">
+                        <h3>Metadata</h3>
+                        <svg class="panel-collapse-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                    </div>
+                    <div class="meta-body">
+                        {% if selected_event and selected_event.payload is defined %}
+                            <pre class="event-meta" id="event-meta-view">{{ selected_event | tojson(indent=2) }}</pre>
+                        {% else %}
+                            <div class="empty-state" id="event-meta-placeholder">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                No metadata to display.
+                            </div>
+                            <pre class="event-meta" id="event-meta-view" style="display:none"></pre>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Payload sub-panel -->
+                <div class="payload-panel" id="payload-panel">
+                    <div class="panel-header collapsible" id="payload-panel-header">
+                        <h3>Payload</h3>
+                        <svg class="panel-collapse-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                    </div>
+                    <div class="payload-body">
+                        {% if selected_event and selected_event.payload is defined %}
+                            <pre class="event-payload" id="event-payload-view">{{ selected_event.payload | tojson(indent=2) }}</pre>
+                        {% else %}
+                            <div class="empty-state" id="event-payload-placeholder">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                No payload to display.
+                            </div>
+                            <pre class="event-payload" id="event-payload-view" style="display:none"></pre>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast stack -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+    const DATE_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss";
+
+    /* ── Toast ─────────────────────────────────────────── */
+    function showToast(title, message, type = 'error') {
+        const stack = document.getElementById('toast-stack');
+        const toast = document.createElement('div');
+        toast.className = `toast${type === 'success' ? ' toast-success' : ''}`;
+        const icon = type === 'success'
+            ? `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`
+            : `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+        toast.innerHTML = `
+            ${icon}
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`;
+        stack.appendChild(toast);
+        setTimeout(() => dismissToast(toast), 5000);
+    }
+
+    function dismissToast(el) {
+        if (!el || el.classList.contains('toast-leaving')) return;
+        el.classList.add('toast-leaving');
+        el.addEventListener('animationend', () => el.remove());
+    }
+
+    /* ── Syntax highlight ─────────────────────────────── */
+    function syntaxHighlight(json) {
+        return json
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
+                let cls = 'num';
+                if (/^"/.test(match)) cls = /:$/.test(match) ? 'key' : 'str';
+                else if (/true|false/.test(match)) cls = 'bool';
+                else if (/null/.test(match)) cls = 'null';
+                return `<span class="${cls}">${match}</span>`;
+            });
+    }
+
+    /* ── Event detail rendering ───────────────────────── */
+    const detailView = document.getElementById('event-payload-view');
+    const detailPlaceholder = document.getElementById('event-payload-placeholder');
+    const eventMetaView = document.getElementById('event-meta-view');
+    const metaPlaceholder = document.getElementById('event-meta-placeholder');
+    const caption = document.getElementById('event-panel-caption');
+
+    function renderMeta(event) {
+        if (!eventMetaView) return;
+        if (!event) {
+            if (metaPlaceholder) metaPlaceholder.style.display = '';
+            eventMetaView.style.display = 'none';
+            return;
+        }
+        if (metaPlaceholder) metaPlaceholder.style.display = 'none';
+        eventMetaView.style.display = '';
+        const { payload, ...metadata } = event;
+        metadata.timestamp = dayjs(metadata.timestamp).format(DATE_TIME_FORMAT);
+        eventMetaView.innerHTML = syntaxHighlight(JSON.stringify(metadata, null, 2));
+    }
+
+    function renderPayload(event) {
+        if (!detailView) return;
+        if (!event || !('payload' in event)) {
+            if (detailPlaceholder) detailPlaceholder.style.display = '';
+            detailView.style.display = 'none';
+            return;
+        }
+        if (detailPlaceholder) detailPlaceholder.style.display = 'none';
+        detailView.style.display = '';
+        const provider = event.payload.provider;
+        const json = typeof event.payload === 'string' ? event.payload : JSON.stringify(event.payload, null, 2);
+        detailView.innerHTML = syntaxHighlight(json);
+    }
+
+    function renderEvent(event) {
+        renderMeta(event);
+        renderPayload(event);
+    }
+
+    /* ── Step accordion + event selection ────────────── */
+    const eventListEl = document.getElementById('event-list');
+
+    function selectEvent(button) {
+        document.querySelectorAll('.event-item').forEach(i => i.classList.remove('active'));
+        button.classList.add('active');
+        renderEvent(JSON.parse(button.getAttribute('data-event')));
+    }
+
+    function attachStepListeners() {
+        // Step headers → toggle accordion
+        eventListEl.querySelectorAll('.step-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const row = header.closest('.step-row');
+                const isActive = row.classList.contains('active');
+
+                // Collapse all
+                eventListEl.querySelectorAll('.step-row').forEach(r => r.classList.remove('active'));
+
+                if (!isActive) {
+                    row.classList.add('active');
+                    // Auto-select first event in the newly opened step
+                    const firstEvent = row.querySelector('.event-item');
+                    if (firstEvent) selectEvent(firstEvent);
+                } else {
+                    // Collapsed everything — clear detail
+                    renderEvent(null);
+                }
+            });
+        });
+
+        // Event items → show detail
+        eventListEl.querySelectorAll('.event-item').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectEvent(button);
+            });
+        });
+    }
+
+    function buildStepRows(steps) {
+        if (!steps.length) {
+            eventListEl.innerHTML = `
+                <div class="empty-state">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                    No events for this run.
+                </div>`;
+            renderEvent(null);
+            return;
+        }
+
+        const rows = [];
+        steps.forEach(step => {
+            const tsDisplay = dayjs(step.started_at).format(DATE_TIME_FORMAT);
+            const evItems = step.events.map((ev, i) => {
+                const typeDisplay = ev.type.replace(/_([a-z0-9])/g, (_, l) => l.toUpperCase());
+                const tsEv = ev.timestamp ? dayjs(ev.timestamp).format(DATE_TIME_FORMAT) : '—';
+                return `
+                    <button class="event-item event-${ev.type}"
+                            type="button" data-event='${JSON.stringify(ev).replace(/'/g, "&#39;")}'>
+                        <strong>${typeDisplay}</strong>
+                        <span>${ev.id} · ${tsEv}</span>
+                    </button>`;
+            }).join('');
+            
+            if (step.id.startsWith('run')) {
+                // Special case: run-level events (no step)
+                const isActive = step.id === 'run.start';
+                rows.push(`
+                    <div class="step-row${isActive ? ' active' : ''}" data-step-id="${step.id}">
+                        <button class="step-header" type="button">
+                            <div class="step-info">
+                                <strong>${step.id.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}</strong>
+                                <span>${tsDisplay}</span>
+                            </div>
+                        </button>
+                    </div>`);
+            } else {
+                rows.push(`
+                    <div class="step-row" data-step-id="${step.id}">
+                        <button class="step-header" type="button">
+                            <svg class="step-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                            <span class="step-badge">#${step.id}</span>
+                            <div class="step-info">
+                                <strong>Step ${step.id}</strong>
+                                <span>${tsDisplay}</span>
+                            </div>
+                        </button>
+                        <div class="step-events">${evItems}</div>
+                    </div>`);
+            }
+        });
+
+        eventListEl.innerHTML = rows.join('');
+        attachStepListeners();
+
+        // Render first event of first step
+        const firstEventBtn = eventListEl.querySelector('.event-item');
+        if (firstEventBtn) renderEvent(JSON.parse(firstEventBtn.getAttribute('data-event')));
+    }
+
+    /* ── Run switching ────────────────────────────────── */
+    const runButtons = Array.from(document.querySelectorAll('.run-card'));
+    const SPINNER = '<div class="spinner"></div>';
+
+    /* ── Shared run card click handler ────────────────── */
+    const handleRunCardClick = async function() {
+        const runId = this.getAttribute('data-run-id');
+        const allRunCards = document.querySelectorAll('.run-card');
+        allRunCards.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        setActiveReplayRequest(null);
+
+        caption.innerHTML = `<span class="spinner-row">${SPINNER} Loading…</span>`;
+        eventListEl.innerHTML = `
+            <div class="loading-state">
+                ${SPINNER}
+                <span>Fetching events…</span>
+            </div>`;
+        allRunCards.forEach(b => b.disabled = true);
+
+        try {
+            const [response, replayRequest] = await Promise.all([
+                fetch(`/api/runs/${runId}/steps`),
+                fetchReplayRequest(runId).catch(() => null),
+            ]);
+            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+            const allSteps = await response.json();
+
+            const _steps = allSteps.filter(s => !s.id.startsWith('run.'));
+            const eventCount = _steps.reduce((acc, step) => acc + step.events.length, 0);
+            caption.textContent = `${_steps.length} step${_steps.length !== 1 ? 's' : ''} with ${eventCount} event${eventCount !== 1 ? 's' : ''}.`;
+            buildStepRows(allSteps);
+            setActiveReplayRequest(replayRequest);
+        } catch (err) {
+            caption.textContent = 'Failed to load events.';
+            buildStepRows([]);
+            showToast('Failed to load events', `Could not fetch events for ${runId}. ${err.message || 'Please try again.'}`);
+        } finally {
+            allRunCards.forEach(b => b.disabled = false);
+        }
+    };
+
+    runButtons.forEach(button => {
+        button.addEventListener('click', handleRunCardClick);
+    });
+
+    /* ── Replay button ────────────────────────────────── */
+    const replayBtn = document.getElementById('replay-btn');
+    const replayIndicator = document.getElementById('replay-indicator');
+    let replayEnabled = false;
+    let activeReplayRequest = null;
+
+    const PLAY_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"/></svg>';
+    const PAUSE_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="10" y2="18"/><line x1="14" y1="6" x2="14" y2="18"/></svg>';
+
+    function setReplayUiState(enabled) {
+        replayEnabled = enabled;
+        replayBtn.classList.toggle('active', enabled);
+        replayIndicator.classList.toggle('visible', enabled);
+        replayBtn.innerHTML = enabled ? `${PAUSE_ICON} Pause` : `${PLAY_ICON} Replay`;
+    }
+
+    function clearReplayStepIndicator() {
+        eventListEl.querySelectorAll('.step-replay-dot').forEach(dot => dot.remove());
+    }
+
+    function applyReplayStepIndicator(startStepId) {
+        clearReplayStepIndicator();
+        if (!startStepId) return;
+
+        const stepRows = Array.from(eventListEl.querySelectorAll('.step-row'));
+        const targetRow = stepRows.find(row => row.getAttribute('data-step-id') === startStepId);
+        if (!targetRow) return;
+
+        const header = targetRow.querySelector('.step-header');
+        if (!header) return;
+
+        const dot = document.createElement('span');
+        dot.className = 'step-replay-dot';
+        dot.title = 'Replay starts from this step';
+        header.appendChild(dot);
+    }
+
+    function setActiveReplayRequest(replayRequest) {
+        activeReplayRequest = replayRequest;
+        const enabled = Boolean(replayRequest && replayRequest.start_step_id);
+        setReplayUiState(enabled);
+        applyReplayStepIndicator(enabled ? replayRequest.start_step_id : null);
+    }
+
+    async function fetchReplayRequest(runId) {
+        const response = await fetch(`/api/runs/${runId}/replay`, { method: 'GET' });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || `Server responded with ${response.status}`);
+        }
+        const replayRequest = await response.json();
+        if (!replayRequest || !replayRequest.start_step_id) {
+            return null;
+        }
+        return replayRequest;
+    }
+
+    function getSelectedReplayStepId() {
+        const activeEvent = eventListEl.querySelector('.event-item.active');
+        let selectedRow = activeEvent ? activeEvent.closest('.step-row') : null;
+
+        if (!selectedRow) {
+            selectedRow = eventListEl.querySelector('.step-row.active');
+        }
+        if (!selectedRow) {
+            return null;
+        }
+
+        const stepId = selectedRow.getAttribute('data-step-id');
+        if (!stepId || stepId.startsWith('run.')) {
+            return null;
+        }
+        return stepId;
+    }
+
+    /* ── Refresh runs button ──────────────────────────── */
+    document.getElementById('refresh-runs-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('refresh-runs-btn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/runs');
+            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+            const runs = await response.json();
+
+            const runList = document.getElementById('run-list');
+            if (runs && runs.length > 0) {
+                const html = runs.map((run, i) => `
+                    <button class="run-card${i === 0 ? ' active' : ''}" type="button" data-run-id="${run.id}">
+                        <strong>${run.id}</strong>
+                        <small>${run.workflow_id || ''}</small>
+                    </button>
+                `).join('');
+                runList.innerHTML = html;
+
+                // Re-attach event listeners to run cards
+                document.querySelectorAll('.run-card').forEach(card => {
+                    card.addEventListener('click', handleRunCardClick);
+                });
+
+                showToast('Runs refreshed', 'Successfully loaded latest runs.', 'success');
+            } else {
+                runList.innerHTML = `
+                    <li class="empty-state">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h5M8 16h3"/></svg>
+                        No runs available.
+                    </li>`;
+            }
+        } catch (err) {
+            showToast('Refresh failed', `Could not refresh runs: ${err.message}`);
+        } finally {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    });
+
+    replayBtn.addEventListener('click', async () => {
+        const activeRunBtn = document.querySelector('.run-card.active');
+        const runId = activeRunBtn ? activeRunBtn.getAttribute('data-run-id') : null;
+        if (!runId) {
+            showToast('No run selected', 'Select a run before toggling replay.');
+            return;
+        }
+
+        replayBtn.disabled = true;
+        const nextEnabled = !replayEnabled;
+
+        setReplayUiState(nextEnabled);
+
+        try {
+            const selectedStepId = getSelectedReplayStepId();
+            const replayUrl = `/api/runs/${runId}/replay`;
+            const response = nextEnabled ?
+                await fetch(replayUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({ start_step_id: selectedStepId }),
+                    headers: { 'Content-Type': 'application/json' },
+                }) :
+                await fetch(replayUrl, {
+                    method: 'DELETE',
+                });
+            if (!nextEnabled && response.status === 404) {
+                setActiveReplayRequest(null);
+                showToast('Replay canceled', `Replay mode was already canceled for run ${runId}.`, 'success');
+                return;
+            }
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || `Server responded with ${response.status}`);
+            }
+            const data = await response.json().catch(() => ({}));
+            if (nextEnabled) {
+                setActiveReplayRequest({ run_id: runId, start_step_id: data.start_step_id || null });
+            } else {
+                setActiveReplayRequest(null);
+            }
+            showToast(
+                nextEnabled ? 'Replay enabled' : 'Replay canceled',
+                nextEnabled
+                    ? `Replay mode is now active for run ${runId}.`
+                    : `Replay mode has been canceled for run ${runId}.`,
+                'success'
+            );
+        } catch (err) {
+            setReplayUiState(!nextEnabled);
+            showToast('Replay request failed', `${err.message || 'Could not update replay state.'}`);
+        } finally {
+            replayBtn.disabled = false;
+        }
+    });
+
+    /* ── Collapsible meta / payload panels ─────────────── */
+    document.getElementById('meta-panel-header').addEventListener('click', () => {
+        document.getElementById('meta-panel').classList.toggle('collapsed');
+    });
+    document.getElementById('payload-panel-header').addEventListener('click', () => {
+        document.getElementById('payload-panel').classList.toggle('collapsed');
+    });
+
+    /* ── Init server-rendered steps ──────────────────── */
+    attachStepListeners();
+    const firstEventBtn = eventListEl.querySelector('.event-item');
+    if (firstEventBtn) renderEvent(JSON.parse(firstEventBtn.getAttribute('data-event')));
+
+    (async () => {
+        const activeRunBtn = document.querySelector('.run-card.active');
+        const runId = activeRunBtn ? activeRunBtn.getAttribute('data-run-id') : null;
+        if (!runId) {
+            setActiveReplayRequest(null);
+            return;
+        }
+
+        try {
+            const replayRequest = await fetchReplayRequest(runId);
+            setActiveReplayRequest(replayRequest);
+        } catch (err) {
+            setActiveReplayRequest(null);
+            showToast('Replay status unavailable', `Could not load replay state for ${runId}. ${err.message || ''}`);
+        }
+    })();
+</script>
+</body>
+</html>

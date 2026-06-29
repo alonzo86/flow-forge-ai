@@ -1,0 +1,35 @@
+# Example 3: httpx instrumentation with PostgreSQL + JSONL file sinks
+#
+# Install dependencies:
+#   pip install flow_forge_ai[httpx-instr,postgres-sink]
+#
+# Set environment variables before running:
+#   export DB_HOST=localhost
+#   export DB_PORT=5432
+#   export DB_NAME=flow_forge_events
+#   export DB_USER=postgres
+#   export DB_PASSWORD=secret
+
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.httpx_instr.HttpxInstrumentor"
+[instrumentors.options]
+# Truncate large response bodies in traces to keep events readable.
+max_body_bytes = 4096
+
+[[sinks]]
+name = "postgres"
+class_path = "flow_forge_ai.sinks.database_sink.DatabaseSink"
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.postgres_handler.PostgresHandler"
+host = "localhost"
+port = 5432
+database = "flow_forge_events"
+user = "postgres"
+password = "secret"
+
+[[sinks]]
+name = "file log"
+class_path = "flow_forge_ai.sinks.file_sink.FileSink"
+[sinks.options]
+class_path = "flow_forge_ai.sinks.handlers.jsonl_handler.JsonlHandler"
+path = "./traces.jsonl"

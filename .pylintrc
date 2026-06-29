@@ -1,0 +1,23 @@
+[MASTER]
+ignore-paths=core/examples/.*|.*/examples/.*|core/tests/.*|.*/tests/.*
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    broad-exception-caught,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-positional-arguments,
+    import-outside-toplevel
+
+[FORMAT]
+max-line-length=180
+
+[SIMILARITIES]
+min-similarity-lines=12
+
+[SPELLING]
+spelling-private-dict-file=.pylintdict
+spelling-dict=en_US

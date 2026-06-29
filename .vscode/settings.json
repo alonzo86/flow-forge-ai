@@ -1,0 +1,22 @@
+{
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "chat.tools.terminal.autoApprove": {
+        "pytest": true
+    },
+    "mypy-type-checker.ignorePatterns": [
+        "core/tests/*.py",
+        "ui/tests/*.py",
+        "core/examples/*.py"
+    ],
+    "pylint.ignorePatterns": [
+        "**/tests/**/*.py",
+        "**/conftest.py",
+        "**/ui_conftest.py",
+        "**/test_*.py",
+        "**/examples/**/*.py"
+    ]
+}

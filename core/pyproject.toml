@@ -1,0 +1,113 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flow-forge-ai"
+version = "0.1.0"
+description = "Build, trace, inspect, and replay AI workflows with pluggable instrumentation and storage backends."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+license = "MIT"
+
+keywords = [
+    "ai",
+    "llm",
+    "agents",
+    "observability",
+    "instrumentation",
+    "tracing",
+    "workflow",
+    "replay",
+    "langchain",
+    "openai"
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+authors = [
+    { name = "Alon Yampolski", email = "yampolski.a@gmail.com" }
+]
+
+maintainers = [
+    { name = "Alon Yampolski", email = "yampolski.a@gmail.com" }
+]
+
+[project.urls]
+Homepage = "https://github.com/alonzo86/flow-forge-ai"
+Documentation = "https://github.com/alonzo86/flow-forge-ai#readme"
+Repository = "https://github.com/alonzo86/flow-forge-ai"
+Issues = "https://github.com/alonzo86/flow-forge-ai/issues"
+
+
+[project.optional-dependencies]
+httpx-instr = [
+    "httpx>=0.24.0",
+]
+
+openai-instr = [
+    "openai>=1.0.0",
+]
+
+ollama-instr = [
+    "ollama>=0.6.2",
+]
+
+langchain-instr = [
+    "langchain>=1.3.9",
+]
+
+postgres-sink = [
+    "psycopg2-binary>=2.9.0",
+]
+
+mongodb-sink = [
+    "pymongo>=3.12.0",
+]
+
+mysql-sink = [
+    "mysql-connector-python>=8.0.0",
+]
+
+sqlite-sink = [
+    "pysqlite3>=0.6.0",
+]
+
+ui = [
+    "flow-forge-ai-ui>=0.1.0",
+]
+
+dev = [
+    "respx>=0.23.1",
+    "responses>=0.26.1",
+    "mypy>=2.1.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "pytest-asyncio>=0.21.0",
+    "testcontainers>=4.14.2",
+    "pylint[spelling]>=4.0.6",
+    "pip-audit>=2.10.1",
+    "bandit>=1.9.4",
+    "build",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+flow_forge_ai = [
+    "py.typed"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]
