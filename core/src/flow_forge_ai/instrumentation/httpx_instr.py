@@ -33,6 +33,14 @@ class HttpxRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.method = method
+    
+    def to_dict(self) -> dict[str, Any]:
+        base_dict = super().to_dict()
+        base_dict.update({
+            "method": self.method
+        })
+        return base_dict
+
 
 @dataclass(init=False)
 class HttpxResponsePayload(LLMResponsePayload):
@@ -48,6 +56,14 @@ class HttpxResponsePayload(LLMResponsePayload):
                          latency=latency)
         self.status_code = status_code
         self.headers = headers
+    
+    def to_dict(self) -> dict[str, Any]:
+        base_dict = super().to_dict()
+        base_dict.update({
+            "status_code": self.status_code,
+            "headers": self.headers
+        })
+        return base_dict
 
 
 HttpxErrorPayload = LLMErrorPayload

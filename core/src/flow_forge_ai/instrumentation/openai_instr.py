@@ -31,10 +31,18 @@ class OpenAILegacyRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.stream = stream
+    
+    def to_dict(self) -> dict[str, Any]:
+        base_dict = super().to_dict()
+        base_dict.update({
+            "stream": self.stream
+        })
+        return base_dict
 
 
 @dataclass(init=False)
 class OpenAIRequestPayload(LLMRequestPayload):
+    stream: bool
 
     def __init__(self,
                  messages: list[str],
@@ -50,6 +58,13 @@ class OpenAIRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.stream = stream
+    
+    def to_dict(self) -> dict[str, Any]:
+        base_dict = super().to_dict()
+        base_dict.update({
+            "stream": self.stream
+        })
+        return base_dict
 
 
 @dataclass
@@ -57,6 +72,13 @@ class OpenAIUsage:
     prompt_tokens: Optional[int]
     completion_tokens: Optional[int]
     total_tokens: Optional[int]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens
+        }
 
 
 @dataclass(init=False)
@@ -70,6 +92,13 @@ class OpenAIResponsePayload(LLMResponsePayload):
         super().__init__(response=response,
                          latency=latency)
         self.usage = usage
+    
+    def to_dict(self) -> dict[str, Any]:
+        base_dict = super().to_dict()
+        base_dict.update({
+            "usage": self.usage.to_dict() if self.usage else None
+        })
+        return base_dict
 
 OpenAILegacyResponsePayload = LLMResponsePayload
 OpenAILegacyErrorPayload = OpenAIErrorPayload = LLMErrorPayload
