@@ -200,7 +200,7 @@ class TestOpenAIInstrumentor:
             finally:
                 instr.uninstall()
 
-    def test_legacy_api_not_patched_when_chat_completion_missing(self):
+    def test_legacy_api_not_patched_when_chat_completion_missing(self, monkeypatch):
         """If the legacy ChatCompletion API does not exist, it is silently skipped."""
         import openai
 
@@ -208,10 +208,10 @@ class TestOpenAIInstrumentor:
 
         with patch("flow_forge_ai.instrumentation.base.step_guard", return_value=None):
             # Simulate a runtime where ChatCompletion is absent (openai >= 1.0 style)
-            with patch.object(openai, "ChatCompletion", None, create=False) if hasattr(openai, "ChatCompletion") else patch.object(openai, "_no_legacy", None, create=True):
-                instr.install()
-                assert instr._patched is True
-                instr.uninstall()
+            monkeypatch.delattr(openai, "ChatCompletion", raising=False)
+            instr.install()
+            assert instr._patched is True
+            instr.uninstall()
 
     def test_build_cached_response_reconstructs_chat_completion(self):
         import openai.types.chat

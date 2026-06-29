@@ -31,7 +31,7 @@ class OpenAILegacyRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.stream = stream
-    
+
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         base_dict.update({
@@ -58,7 +58,7 @@ class OpenAIRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.stream = stream
-    
+
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         base_dict.update({
@@ -92,7 +92,7 @@ class OpenAIResponsePayload(LLMResponsePayload):
         super().__init__(response=response,
                          latency=latency)
         self.usage = usage
-    
+
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         base_dict.update({

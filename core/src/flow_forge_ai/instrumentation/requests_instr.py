@@ -36,7 +36,7 @@ class RequestPayload(LLMRequestPayload):
                          headers=headers)
         self.method = method
         self.params = params
-    
+
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         base_dict.update({

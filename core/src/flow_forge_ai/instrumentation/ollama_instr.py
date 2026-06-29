@@ -32,7 +32,7 @@ class OllamaRequestPayload(LLMRequestPayload):
                          instructions=instructions,
                          headers=headers)
         self.stream = stream
-    
+
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         base_dict.update({
