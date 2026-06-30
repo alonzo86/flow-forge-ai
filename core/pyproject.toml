@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flow-forge-ai-sdk"
-version = "0.1.0"
+version = "0.1.1"
 description = "Build, trace, inspect, and replay AI workflows with pluggable instrumentation and storage backends."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -30,6 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
@@ -83,7 +84,7 @@ sqlite-sink = [
 ]
 
 ui = [
-    "flow-forge-ai-sdk-ui>=0.1.0",
+    "flow-forge-ai-sdk-ui>=0.1.1",
 ]
 
 dev = [

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flow-forge-ai-sdk-ui"
-version = "0.1.0"
+version = "0.1.1"
 description = "Debug UI for flow-forge-ai workflows."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -18,7 +18,7 @@ authors = [
 
 
 dependencies = [
-    "flow-forge-ai-sdk>=0.1.0",
+    "flow-forge-ai-sdk>=0.1.1",
     "httpx>=0.24.0",
     "fastapi>=0.115.0",
     "uvicorn>=0.35.0",

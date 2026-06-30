@@ -1,0 +1,83 @@
+name: Publish packages
+
+on:
+  push:
+    tags:
+      - "core-v*"
+      - "ui-v*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish-core:
+    if: startsWith(github.ref, 'refs/tags/core-v')
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Verify version
+        run: |
+          VERSION=$(uv version --short)
+          TAG=${GITHUB_REF#refs/tags/core-v}
+          test "$VERSION" = "$TAG"
+
+      - name: Build
+        run: uv build --project core
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: core/dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+
+
+  publish-ui:
+    if: startsWith(github.ref, 'refs/tags/ui-v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Verify version
+        run: |
+          VERSION=$(uv version --short)
+          TAG=${GITHUB_REF#refs/tags/ui-v}
+          test "$VERSION" = "$TAG"
+
+      - name: Build
+        run: uv build --project ui
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ui/dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2

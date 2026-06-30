@@ -6,10 +6,11 @@
 
 Build, trace, and replay AI workflows with pluggable instrumentation and storage backends.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](#packages)
-[![Tests: pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](#development)
-[![Coverage: pytest-cov](https://img.shields.io/badge/coverage-pytest--cov-00A98F)](#development)
-[![Type Checking: pyright](https://img.shields.io/badge/type%20checking-pyright-2C5BB4)](#development)
+[![PyPI](https://img.shields.io/pypi/v/flow-forge-ai-sdk)](#packages)
+[![Python](https://img.shields.io/pypi/pyversions/flow-forge-ai-sdk)](#packages)
+[![CI](https://github.com/alonzo86/flow-forge-ai/actions/workflows/ci.yml/badge.svg)](#development)
+[![codecov](https://codecov.io/gh/alonzo86/flow-forge-ai/branch/main/graph/badge.svg)](https://codecov.io/gh/alonzo86/flow-forge-ai)
+[![Type Checking: mypy](https://img.shields.io/badge/type%20checking-mypy-2C5BB4)](#development)
 [![UI: FastAPI](https://img.shields.io/badge/ui-fastapi-009688?logo=fastapi&logoColor=white)](#packages)
 
 </div>

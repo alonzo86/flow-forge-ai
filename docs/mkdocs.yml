@@ -1,0 +1,17 @@
+site_name: Flow Forge AI
+site_url: https://alonzo86.github.io/flow-forge-ai/
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Examples: examples.md
+  - UI: ui.md
+  - SDK: sdk.md
