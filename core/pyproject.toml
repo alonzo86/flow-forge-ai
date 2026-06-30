@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flow-forge-ai-sdk"
-version = "0.1.1"
+version = "0.1.2"
 description = "Build, trace, inspect, and replay AI workflows with pluggable instrumentation and storage backends."
 readme = "README.md"
 requires-python = ">=3.11"

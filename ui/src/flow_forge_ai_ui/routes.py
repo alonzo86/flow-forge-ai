@@ -101,19 +101,6 @@ async def index(request: Request) -> HTMLResponse:
     return response
 
 
-@router.get("/api/runs/{run_id}/steps")
-async def run_steps(run_id: str, request: Request) -> JSONResponse:
-    _ = request
-    status_code, payload = await _proxy_runtime_json(
-        method="GET",
-        path="/api/steps",
-        query={"run_id": run_id},
-    )
-    if status_code == 404:
-        return JSONResponse([], status_code=404)
-    return JSONResponse(payload, status_code=status_code)
-
-
 @router.get("/api/runs")
 async def list_runs(request: Request) -> JSONResponse:
     status_code, payload = await _proxy_runtime_json(

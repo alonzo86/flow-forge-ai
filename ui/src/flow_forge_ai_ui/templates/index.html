@@ -1083,7 +1083,7 @@
 
         try {
             const [response, replayRequest] = await Promise.all([
-                fetch(`/api/runs/${runId}/steps`),
+                fetch(`/api/runs/steps?run_id=${encodeURIComponent(runId)}`, { method: 'GET' }),
                 fetchReplayRequest(runId).catch(() => null),
             ]);
             if (!response.ok) throw new Error(`Server responded with ${response.status}`);
