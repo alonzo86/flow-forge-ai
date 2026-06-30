@@ -11,7 +11,6 @@ from flow_forge_ai.runtime import RunStartPayload
 from flow_forge_ai.sinks.models.run import Run
 from flow_forge_ai.sinks.models.step import Step
 from flow_forge_ai.sinks.models.event import Event, EventType
-from flow_forge_ai.sinks.handlers.resource_handler import ResourceHandler
 
 
 runs = [

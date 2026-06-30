@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 from flow_forge_ai_ui.app import app
 
-from ui.tests.conftest import mocked_environment
+from tests.conftest import mocked_environment
 
 
 @mocked_environment
