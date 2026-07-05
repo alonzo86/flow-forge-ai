@@ -6,12 +6,15 @@
 
 Build, trace, and replay AI workflows with pluggable instrumentation and storage backends.
 
+[![flow-forge-ai release](https://img.shields.io/github/v/release/alonzo86/flow-forge-ai?filter=core-v*)](https://github.com/alonzo86/flow-forge-ai/releases)
+[![flow-forge-ai-ui release](https://img.shields.io/github/v/release/alonzo86/flow-forge-ai?filter=ui-v*)](https://github.com/alonzo86/flow-forge-ai/releases)
 [![PyPI](https://img.shields.io/pypi/v/flow-forge-ai-sdk)](#packages)
 [![Python](https://img.shields.io/pypi/pyversions/flow-forge-ai-sdk)](#packages)
 [![CI](https://github.com/alonzo86/flow-forge-ai/actions/workflows/ci.yml/badge.svg)](#development)
 [![codecov](https://codecov.io/gh/alonzo86/flow-forge-ai/branch/main/graph/badge.svg)](https://codecov.io/gh/alonzo86/flow-forge-ai)
 [![Type Checking: mypy](https://img.shields.io/badge/type%20checking-mypy-2C5BB4)](#development)
 [![UI: FastAPI](https://img.shields.io/badge/ui-fastapi-009688?logo=fastapi&logoColor=white)](#packages)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://alonzo86.github.io/flow-forge-ai/)
 
 </div>
 

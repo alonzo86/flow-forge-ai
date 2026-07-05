@@ -2,6 +2,8 @@ name: Publish packages
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "core-v*"
       - "ui-v*"

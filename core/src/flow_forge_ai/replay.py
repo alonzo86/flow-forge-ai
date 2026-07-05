@@ -123,17 +123,6 @@ class _ReplayManager:
         """Return all steps for *run_id* from the replay source_sink."""
         return self._resource_handler.list_steps(run_id)
 
-    def _resolve_default_start_step_id(self, run_id: str) -> str:
-        """Return the first replayable step ID for *run_id*."""
-        steps = self.list_steps(run_id)
-        for step in steps:
-            if not step.events:
-                continue
-            if step.events[0].type in _RUN_BOUNDARY_TYPES:
-                continue
-            return step.id
-        raise ValueError(f"Run {run_id} has no replayable steps")
-
     def get_step(self, workflow_id: str, step_id: str) -> Optional[Step]:
         """Return the cached step for a given run and step ID, if any.
 

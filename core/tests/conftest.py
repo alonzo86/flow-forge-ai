@@ -2,6 +2,8 @@ from typing import List, Optional
 from enum import Enum
 from unittest.mock import MagicMock, patch
 
+from flow_forge_ai.runtime import RunStartPayload
+from flow_forge_ai.sinks.models.step import Step
 import pytest
 
 from flow_forge_ai.config.config_handler import get_config_handler
@@ -9,6 +11,42 @@ from flow_forge_ai.sinks.models.event import Event, EventType
 from flow_forge_ai.sinks.handlers.resource_handler import ResourceHandler
 from flow_forge_ai.sinks.models.run import Run
 
+
+runs = [
+    Run(id="r1", workflow_id="workflow_1"),
+]
+step2_events = [
+    Event(type=EventType.LLM_REQUEST, payload={"id": 2}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s2", step_id="2"),
+    Event(type=EventType.LLM_RESPONSE, payload={"id": 2}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s2", step_id="2"),
+]
+step3_events = [
+    Event(type=EventType.TOOL_START, payload={"id": 3}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s3", step_id="3"),
+    Event(type=EventType.TOOL_COMPLETED, payload={"id": 3}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s3", step_id="3"),
+]
+run_start_evt = Event(type=EventType.RUN_START, payload=RunStartPayload().to_dict(), workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s1", step_id=None)
+run_end_evt = Event(type=EventType.RUN_END, payload={}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s4", step_id=None)
+steps = [
+    Step(
+        id="run.start",
+        started_at=run_start_evt.timestamp,
+        events=[run_start_evt],
+    ),
+    Step(
+        id=step2_events[0].id,
+        started_at=step2_events[0].timestamp,
+        events=step2_events
+    ),
+    Step(
+        id=step3_events[0].id,
+        started_at=step3_events[0].timestamp,
+        events=step3_events
+    ),
+    Step(
+        id="run.end",
+        started_at=run_end_evt.timestamp,
+        events=[run_end_evt],
+    )
+]
 
 test_event_types = {event_type.name: event_type.value for event_type in EventType}
 test_event_types.update({"TEST": "test"})  # Add a custom event type for testing

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
-import http.server
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -81,7 +81,7 @@ class RunErrorPayload:
         }
 
 
-class _RuntimeRequestHandler(http.server.BaseHTTPRequestHandler):
+class _RuntimeRequestHandler(BaseHTTPRequestHandler):
     """HTTP handler for runtime state and replay management."""
 
     def log_message(self, format: str, *args: Any) -> None:  # pylint: disable=redefined-builtin
@@ -234,7 +234,7 @@ class _RuntimeListener:
     """Background HTTP server exposing runtime endpoints."""
 
     def __init__(self, runtime_owner: "_Runtime", host: str, port: int) -> None:
-        self._server = http.server.ThreadingHTTPServer((host, port), _RuntimeRequestHandler)
+        self._server = ThreadingHTTPServer((host, port), _RuntimeRequestHandler)
         self._server.runtime = runtime_owner  # type: ignore[attr-defined]
         self._thread = threading.Thread(
             target=self._server.serve_forever,
@@ -306,12 +306,6 @@ class _Runtime:
     def load_sink(self, sink: BaseSink) -> "_Runtime":
         """Register a sink and return *self* for chaining."""
         self._router.add_sink(sink)
-        return self
-
-    def load_analysis_handler(self, instr: BaseInstrumentor) -> "_Runtime":
-        """Register a custom :class:`~tracing.instrumentation.BaseInstrumentor`."""
-        self._instrumentors.append(instr)
-        instr.install()
         return self
 
     def load_instrumentor(self, instr: BaseInstrumentor) -> "_Runtime":

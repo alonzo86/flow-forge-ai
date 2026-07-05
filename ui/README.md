@@ -2,6 +2,7 @@
 
 Web UI for browsing and replaying [flow-forge-ai](../core/) workflow runs.
 
+[![Release](https://img.shields.io/github/v/release/alonzo86/flow-forge-ai?filter=ui-v*)](https://github.com/alonzo86/flow-forge-ai/releases)
 [![PyPI](https://img.shields.io/pypi/v/flow-forge-ai-sdk)](#packages)
 [![Python](https://img.shields.io/pypi/pyversions/flow-forge-ai-sdk)](#packages)
 [![CI](https://github.com/alonzo86/flow-forge-ai/actions/workflows/ci.yml/badge.svg)](#development)
