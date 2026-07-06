@@ -8,6 +8,7 @@
 | `flow_forge_ai.instrumentation.ollama_instr.OllamaInstrumentor` | `ollama` |
 | `flow_forge_ai.instrumentation.httpx_instr.HttpxInstrumentor` | `httpx` |
 | `flow_forge_ai.instrumentation.requests_instr.RequestsInstrumentor` | `requests` |
+| `flow_forge_ai.instrumentation.logging_instr.LoggingInstrumentor` | `logging` (stdlib) |
 
 Declare instrumentors in `config.toml`:
 

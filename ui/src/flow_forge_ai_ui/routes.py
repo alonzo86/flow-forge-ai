@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Request
@@ -103,12 +104,19 @@ async def index(request: Request) -> HTMLResponse:
 
 @router.get("/api/runs")
 async def list_runs(request: Request) -> JSONResponse:
+    query_params = dict(request.query_params)
     status_code, payload = await _proxy_runtime_json(
         method="GET",
         path="/api/runs",
-        query=dict(request.query_params),
+        query={"workflow_id": query_params["workflow_id"]} if "workflow_id" in query_params else None,
     )
-    return JSONResponse(payload, status_code=status_code)
+    if status_code != 200:
+        return JSONResponse(payload, status_code=status_code)
+
+    runs = payload if isinstance(payload, list) else []
+    filtered = _filter_runs(runs, query_params)
+    paginated = _paginate_runs(filtered, query_params)
+    return JSONResponse(paginated, status_code=200)
 
 
 @router.get("/api/steps")
@@ -165,3 +173,96 @@ async def cancel_replay(run_id: str) -> JSONResponse:
         path=f"/api/runs/{run_id}/replay",
     )
     return JSONResponse(payload, status_code=status_code)
+
+
+@router.get("/api/runs/{run_id}/export")
+async def export_run(run_id: str) -> JSONResponse:
+    status_code, runs_payload = await _proxy_runtime_json(
+        method="GET",
+        path="/api/runs",
+    )
+    if status_code != 200:
+        return JSONResponse(runs_payload, status_code=status_code)
+
+    runs = runs_payload if isinstance(runs_payload, list) else []
+    run = next((item for item in runs if item.get("id") == run_id), None)
+    if run is None:
+        return JSONResponse({"error": f"run_id '{run_id}' not found"}, status_code=404)
+
+    status_code, steps_payload = await _proxy_runtime_json(
+        method="GET",
+        path="/api/steps",
+        query={"run_id": run_id},
+    )
+    if status_code != 200:
+        return JSONResponse(steps_payload, status_code=status_code)
+
+    steps = steps_payload if isinstance(steps_payload, list) else []
+    events = [event for step in steps for event in step.get("events", [])]
+    return JSONResponse(
+        {
+            "run": run,
+            "steps": steps,
+            "events": events,
+        },
+        status_code=200,
+    )
+
+
+def _filter_runs(runs: list[dict[str, Any]], query_params: dict[str, str]) -> list[dict[str, Any]]:
+    run_id = query_params.get("run_id")
+    workflow_id = query_params.get("workflow_id")
+    search = query_params.get("search")
+    started_after = _parse_iso_datetime(query_params.get("started_after"))
+    started_before = _parse_iso_datetime(query_params.get("started_before"))
+
+    filtered: list[dict[str, Any]] = []
+    for run in runs:
+        if run_id and run.get("id") != run_id:
+            continue
+        if workflow_id and run.get("workflow_id") != workflow_id:
+            continue
+        if search:
+            search_lower = search.lower()
+            haystack = f"{run.get('id', '')} {run.get('workflow_id', '')}".lower()
+            if search_lower not in haystack:
+                continue
+
+        started_at = _parse_iso_datetime(run.get("started_at"))
+        if started_after and started_at and started_at < started_after:
+            continue
+        if started_before and started_at and started_at > started_before:
+            continue
+        filtered.append(run)
+
+    return filtered
+
+
+def _paginate_runs(runs: list[dict[str, Any]], query_params: dict[str, str]) -> list[dict[str, Any]]:
+    limit = _safe_int(query_params.get("limit"), default=None)
+    offset = _safe_int(query_params.get("offset"), default=0)
+
+    if offset is None or offset < 0:
+        offset = 0
+    paged = runs[offset:]
+    if limit is None or limit < 0:
+        return paged
+    return paged[:limit]
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _safe_int(value: Optional[str], default: Optional[int]) -> Optional[int]:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
