@@ -1,7 +1,7 @@
 {
     "python.testing.pytestArgs": [
-        "--rootdir=ui",
-        "ui/tests"
+        "--rootdir=core",
+        "core/tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
