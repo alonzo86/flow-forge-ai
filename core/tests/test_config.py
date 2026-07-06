@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+from flow_forge_ai.config.models import SinkConfig
 import pytest
 
 from flow_forge_ai.config.config_handler import ConfigHandler, get_config_handler, Path
@@ -99,3 +100,76 @@ class TestConfigGetters:
 
         with pytest.raises(KeyError):
             config.get_sink("nonexistent")
+
+
+class TestConfigModels:
+    """Test Config model classes."""
+
+    def test_instrumentor_model_creation(self):
+        """Test creating an InstrumentorConfig model."""
+        from flow_forge_ai.config.models import InstrumentorConfig
+
+        instr_config = InstrumentorConfig(
+            class_path="flow_forge_ai.instrumentation.test_instr.TestInstrumentor",
+            options={"enabled": True},
+        )
+        assert instr_config.class_path == "flow_forge_ai.instrumentation.test_instr.TestInstrumentor"
+        assert instr_config.options["enabled"] is True
+
+    def test_sink_model_creation(self):
+        """Test creating a SinkConfig model."""
+        sink_config = SinkConfig(
+            name="test_sink",
+            class_path="flow_forge_ai.sinks.test_sink.TestSink",
+            options={"param": "value"},
+        )
+        assert sink_config.name == "test_sink"
+        assert sink_config.class_path == "flow_forge_ai.sinks.test_sink.TestSink"
+        assert sink_config.options["param"] == "value"
+
+    def test_runtime_listener_model_creation(self):
+        """Test creating a RuntimeListenerConfig model."""
+        from flow_forge_ai.config.models import RuntimeListenerConfig
+
+        runtime_config = RuntimeListenerConfig(
+            enabled=True,
+            source_sink="test_sink",
+            listener_host="localhost",
+            listener_port=8080,
+        )
+        assert runtime_config.enabled is True
+        assert runtime_config.source_sink == "test_sink"
+        assert runtime_config.listener_host == "localhost"
+        assert runtime_config.listener_port == 8080
+
+    def test_config_model_creation(self):
+        """Test creating a Config model with nested configurations."""
+        from flow_forge_ai.config.models import Config, InstrumentorConfig, SinkConfig, RuntimeListenerConfig
+
+        instr_config = InstrumentorConfig(
+            class_path="flow_forge_ai.instrumentation.test_instr.TestInstrumentor",
+            options={"enabled": True},
+        )
+        sink_config = SinkConfig(
+            name="test_sink",
+            class_path="flow_forge_ai.sinks.test_sink.TestSink",
+            options={"param": "value"},
+        )
+        runtime_config = RuntimeListenerConfig(
+            enabled=True,
+            source_sink="test_sink",
+            listener_host="localhost",
+            listener_port=8080,
+        )
+
+        config = Config(
+            instrumentors=[instr_config],
+            sinks=[sink_config],
+            runtime=runtime_config,
+        )
+
+        assert len(config.instrumentors) == 1
+        assert config.instrumentors[0].class_path == "flow_forge_ai.instrumentation.test_instr.TestInstrumentor"
+        assert len(config.sinks) == 1
+        assert config.sinks[0].name == "test_sink"
+        assert config.runtime.enabled is True

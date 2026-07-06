@@ -229,20 +229,21 @@ class MongoDBHandler(ResourceHandler):
 
     def _create_indices(self) -> None:
         """Internal: create indices and collections for efficient querying."""
-        if self._collection is None or self._db is None:
+        if self._db is None:
             return
 
+        collection = self._db["events"]
         try:
             # Create/access events collection
-            self._collection.create_index("id", unique=True)
-            self._collection.create_index("type")
-            self._collection.create_index("workflow_id")
-            self._collection.create_index("run_id")
-            self._collection.create_index("trace_id")
-            self._collection.create_index("step_id")
-            self._collection.create_index("span_id")
-            self._collection.create_index("timestamp")
-            self._collection.create_index("payload")
+            collection.create_index("id", unique=True)
+            collection.create_index("type")
+            collection.create_index("workflow_id")
+            collection.create_index("run_id")
+            collection.create_index("trace_id")
+            collection.create_index("step_id")
+            collection.create_index("span_id")
+            collection.create_index("timestamp")
+            collection.create_index("payload")
             logger.debug("Created MongoDB collections and indices")
         except Exception as e:
             logger.warning(f"Failed to create collections/indices: {e}")

@@ -210,27 +210,3 @@ class TestJsonlHandlerQueryEvents:
         handler.connect()
         with pytest.raises(FileNotFoundError):
             handler.query_events("r1")
-
-
-class TestJsonlHandlerDisconnect:
-    def test_disconnect_closes_open_file(self, tmp_path):
-        path = tmp_path / "traces.jsonl"
-        handler = JsonlHandler(path)
-        handler.connect()
-        # Force a file handle open by monkey-patching
-        handler._file = open(path, "a", encoding="utf-8")
-        assert not handler._file.closed
-        handler.disconnect()
-        assert handler._file is None
-
-    def test_disconnect_when_no_file_is_safe(self, tmp_path):
-        handler = JsonlHandler(tmp_path / "t.jsonl")
-        handler.connect()
-        handler.disconnect()  # _file is None – should not raise
-
-
-class TestJsonlHandlerFlush:
-    def test_flush_with_no_open_file_is_safe(self, tmp_path):
-        handler = JsonlHandler(tmp_path / "t.jsonl")
-        handler.connect()
-        handler.flush()  # should not raise

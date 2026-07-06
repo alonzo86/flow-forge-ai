@@ -1,8 +1,15 @@
 from unittest.mock import patch
 
+from flow_forge_ai.sinks.handlers import create_resource_handler
 from flow_forge_ai.sinks.models.event import Event, EventType
 from flow_forge_ai.sinks.database_sink import DatabaseSink
+import pytest
 from conftest import MockDatabaseHandler, TestEventType
+
+
+class DummyClass:
+    """A dummy class to test unsupported class path."""
+    pass
 
 
 @patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
@@ -81,3 +88,21 @@ def test_health_check(mock_create_resource_handler):
     # Close and check again
     sink.close()
     assert not sink.health_check(), "Health check should fail after close"
+
+def test_create_resource_handler():
+    options = {"path": "my_sqlite.db"}
+    resource = create_resource_handler(class_path="flow_forge_ai.sinks.handlers.sqlite_handler.SQLiteHandler",
+                                       **options)
+    assert resource is not None, "Resource handler should be created"
+
+def test_create_resource_handler_fail_import():
+    options = {"path": "my_sqlite.db"}
+    with pytest.raises(ImportError):
+        create_resource_handler(class_path="flow_forge_ai.sinks.handlers.none_handler.UnrealHandler",
+                                **options)
+
+def test_create_resource_handler_unsupported_class():
+    options = {"path": "my_sqlite.db"}
+    with pytest.raises(TypeError):
+        create_resource_handler(class_path="test_database_sink.DummyClass", **options)
+

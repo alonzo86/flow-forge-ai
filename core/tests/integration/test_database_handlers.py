@@ -172,6 +172,43 @@ class TestSQLiteHandler:
         # Verify event was saved by checking health check passes
         assert handler.health_check() is True
 
+    def test_sqlite_handler_list_runs(self):
+        """Test SQLiteHandler list_runs method."""
+        handler = SQLiteHandler(":memory:")
+        handler.connect()
+
+        events = [
+            Event(type=EventType.RUN_START, payload={}, workflow_id="workflow_1", run_id="run-1", trace_id="t1", span_id="s1", step_id=None),
+            Event(type=EventType.LLM_REQUEST, payload={}, workflow_id="workflow_1", run_id="run-1", trace_id="t1", span_id="s2", step_id="2"),
+            Event(type=EventType.RUN_END, payload={}, workflow_id="workflow_1", run_id="run-1", trace_id="t1", span_id="s3", step_id=None),
+            Event(type=EventType.RUN_START, payload={}, workflow_id="workflow_2", run_id="run-2", trace_id="t1", span_id="s1", step_id=None),
+            Event(type=EventType.LLM_REQUEST, payload={}, workflow_id="workflow_2", run_id="run-2", trace_id="t1", span_id="s2", step_id="2"),
+        ]
+        handler.save_events(events)
+
+        runs = handler.list_runs()
+        assert any(run.id == "run-1" for run in runs)
+        assert len(runs) == 2
+
+    def test_sqlite_handler_query_events(self):
+        """Test SQLiteHandler query_events method."""
+        handler = SQLiteHandler(":memory:")
+        handler.connect()
+
+        events = [
+            Event(type=EventType.RUN_START, payload={}, workflow_id="workflow_3", run_id="run-3", trace_id="t1", span_id="s1", step_id="1"),
+            Event(type=EventType.LLM_REQUEST, payload={}, workflow_id="workflow_3", run_id="run-3", trace_id="t1", span_id="s2", step_id="2"),
+            Event(type=EventType.LLM_RESPONSE, payload={}, workflow_id="workflow_3", run_id="run-3", trace_id="t1", span_id="s2", step_id="2"),
+            Event(type=EventType.RUN_END, payload={}, workflow_id="workflow_3", run_id="run-3", trace_id="t1", span_id="s3", step_id="3"),
+        ]
+        handler.save_events(events)
+
+        events = handler.query_events(run_id="run-3")
+        assert len(events) == 4
+
+        events = handler.query_events(run_id="run-3", step_id="2")
+        assert len(events) == 2
+
     def test_sqlite_handler_save_multiple_events(self):
         """Test SQLiteHandler saves multiple events."""
         handler = SQLiteHandler(":memory:")
@@ -185,6 +222,29 @@ class TestSQLiteHandler:
         handler.save_events(events)
 
         # Verify health check (indirectly verifies events were saved)
+        assert handler.health_check() is True
+
+    def test_sqlite_handler_flush_and_reconnect(self):
+        """Test SQLiteHandler flushes and reconnects properly."""
+        handler = SQLiteHandler(":memory:")
+        handler.connect()
+
+        event = Event(
+            type=EventType.LLM_REQUEST,
+            payload={"id": 1},
+            workflow_id="workflow_1",
+            run_id="r1",
+            trace_id="t1",
+            span_id="s1",
+            step_id="1"
+        )
+        handler.save_event(event)
+
+        # Disconnect and reconnect
+        handler.disconnect()
+        handler.connect()
+
+        # Verify health check passes after reconnect
         assert handler.health_check() is True
 
     def test_sqlite_handler_file_based(self):

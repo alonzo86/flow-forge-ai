@@ -17,7 +17,6 @@ class JsonlHandler(ResourceHandler):
     def __init__(self, path: str | Path):
         self._path = Path(path)
         self._lock = threading.Lock()
-        self._file = None
 
     def connect(self) -> None:
         """Establish connection to the resource."""
@@ -25,10 +24,6 @@ class JsonlHandler(ResourceHandler):
 
     def disconnect(self) -> None:
         """Close connections and release resources."""
-        with self._lock:
-            if self._file:
-                self._file.close()
-                self._file = None
 
     def list_runs(self, workflow_id: Optional[str] = None) -> list[Run]:
         """
@@ -40,9 +35,6 @@ class JsonlHandler(ResourceHandler):
         Returns:
             List of run objects
         """
-        with self._lock:
-            if self._file:
-                self._file.flush()
         if not self._path.exists():
             raise FileNotFoundError(f"No such file: {self._path}")
         runs: list[Run] = []
@@ -70,9 +62,6 @@ class JsonlHandler(ResourceHandler):
         Returns:
             List of event objects
         """
-        with self._lock:
-            if self._file:
-                self._file.flush()
         if not self._path.exists():
             raise FileNotFoundError(f"No such file: {self._path}")
         events = []
@@ -99,15 +88,5 @@ class JsonlHandler(ResourceHandler):
         event_data = event.to_dict()
         line = json.dumps(event_data, default=str) + "\n"
         with self._lock:
-            if self._file:
-                self._file.write(line)
-                self._file.flush()
-            else:
-                with open(self._path, "a", encoding="utf-8") as f:
-                    f.write(line)
-
-    def flush(self) -> None:
-        """Flush any pending writes to disk."""
-        with self._lock:
-            if self._file:
-                self._file.flush()
+            with open(self._path, "a", encoding="utf-8") as f:
+                f.write(line)

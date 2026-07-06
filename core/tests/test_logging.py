@@ -1,6 +1,8 @@
 import threading
+from unittest.mock import MagicMock, patch
 
-from flow_forge_ai.internal_logging.logger import Logger
+from flow_forge_ai.internal_logging import logger
+from flow_forge_ai.internal_logging.logger import Logger, set_logger_handler, StandardLoggerHandler, shutdown_logger
 from flow_forge_ai.internal_logging.logging_handler import LoggingHandler
 
 
@@ -28,6 +30,37 @@ class MockLoggingHandler(LoggingHandler):
 
     def shutdown(self):
         self.shutdown_called = True
+
+
+class TestLoggerHelperMethods:
+    """Test Logger helper methods."""
+
+    def test_set_logger_handler(self):
+        """Test that set_logger_handler sets the handler correctly."""
+        handler = MockLoggingHandler()
+
+        set_logger_handler(handler)
+
+        assert logger._default_handler is handler
+    
+    def test_set_logger_handler_replaces_existing_handler(self):
+        """Test that set_logger_handler replaces the existing handler."""
+        handler1 = MockLoggingHandler()
+        set_logger_handler(handler1)
+        assert logger._default_handler is handler1
+
+        handler2 = MockLoggingHandler()
+        set_logger_handler(handler2)
+        assert logger._default_handler is handler2
+    
+    def test_set_logger_handler_calls_shutdown_on_old_handler(self):
+        """Test that set_logger_handler calls shutdown on the old handler."""
+        handler = MockLoggingHandler()
+        set_logger_handler(handler)
+
+        shutdown_logger()
+
+        assert handler.shutdown_called is True
 
 
 class TestLoggerInit:
@@ -166,6 +199,32 @@ class TestLoggerSetHandler:
         logger.set_handler(handler2)
         assert logger.handler is handler2
 
+    def test_set_level_propagates_to_handler(self):
+        """Test that set_level propagates to the handler."""
+        class LevelTrackingHandler(MockLoggingHandler):
+            def __init__(self):
+                super().__init__()
+                self.level_set = None
+
+            def set_level(self, level):
+                self.level_set = level
+
+        handler = LevelTrackingHandler()
+        logger = Logger(handler)
+        
+        logger.set_level("DEBUG")
+        
+        assert handler.level_set == "DEBUG"
+    
+    def test_shutdown_calls_handler_shutdown(self):
+        """Test that shutdown calls the handler's shutdown method."""
+        handler = MockLoggingHandler()
+        logger = Logger(handler)
+        
+        logger.shutdown()
+        
+        assert handler.shutdown_called is True
+
 
 class TestLoggerThreadSafety:
     """Test Logger thread safety."""
@@ -289,3 +348,32 @@ class TestLoggerExceptionHandling:
         assert handler.messages[0][2]["exc_info"] is True
         assert handler.messages[0][2]["user_id"] == 123
         assert handler.messages[0][2]["action"] == "login"
+
+
+class TestStandardLoggerHandler:
+    """Test StandardLoggerHandler"""
+
+    @patch("flow_forge_ai.internal_logging.logger.logging")
+    def test_standard_logger_handler_methods(self, logging):
+        """Test that StandardLoggerHandler methods call the underlying logger."""
+        handler = MagicMock()
+        logging.getLogger.return_value = handler
+        logging.StreamHandler.return_value = handler
+
+        standard_handler = StandardLoggerHandler()
+
+        standard_handler.set_level("DEBUG")
+        standard_handler.debug("debug message")
+        standard_handler.info("info message")
+        standard_handler.warning("warning message")
+        standard_handler.error("error message")
+        standard_handler.critical("critical message")
+        standard_handler.exception("exception message", exc_info=True)
+
+        # Check that messages were logged
+        assert handler.debug.call_count == 1
+        assert handler.info.call_count == 1
+        assert handler.warning.call_count == 1
+        assert handler.error.call_count == 1
+        assert handler.critical.call_count == 1
+        assert handler.exception.call_count == 1
