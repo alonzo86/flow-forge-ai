@@ -178,6 +178,42 @@
         .run-list::-webkit-scrollbar-track { background: transparent; }
         .run-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
 
+        .run-tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .run-tools input {
+            width: 100%;
+            background: var(--surface-2);
+            border: 1px solid var(--border-hi);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 0.42rem 0.5rem;
+            font-size: 0.72rem;
+            font-family: var(--mono);
+        }
+
+        .run-tools button {
+            width: 100%;
+            background: var(--surface-2);
+            border: 1px solid var(--border-hi);
+            color: var(--muted-hi);
+            border-radius: 6px;
+            padding: 0.42rem 0.5rem;
+            font-size: 0.72rem;
+            font-family: var(--mono);
+            cursor: pointer;
+        }
+
+        .run-tools button:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
         .run-card {
             display: block;
             width: 100%;
@@ -728,6 +764,9 @@
             </svg>
             Replay
         </button>
+        <button class="replay-btn" id="export-run-btn" type="button" title="Export selected run as JSON">
+            Export
+        </button>
     </header>
 
     <div class="app-body">
@@ -743,6 +782,12 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+                <div class="run-tools">
+                    <input id="run-search-input" type="text" placeholder="Search run/workflow" aria-label="Search runs by run ID or workflow ID" />
+                    <input id="run-workflow-input" type="text" placeholder="Workflow ID" aria-label="Filter runs by workflow ID" />
+                    <button id="run-filter-apply" type="button">Apply</button>
+                    <button id="run-filter-clear" type="button">Clear</button>
                 </div>
                 <div id="run-list" class="run-list">
                     {% if runs %}
@@ -1083,7 +1128,7 @@
 
         try {
             const [response, replayRequest] = await Promise.all([
-                fetch(`/api/runs/steps?run_id=${encodeURIComponent(runId)}`, { method: 'GET' }),
+                fetch(`/api/steps?run_id=${encodeURIComponent(runId)}`, { method: 'GET' }),
                 fetchReplayRequest(runId).catch(() => null),
             ]);
             if (!response.ok) throw new Error(`Server responded with ${response.status}`);
@@ -1183,13 +1228,20 @@
     }
 
     /* ── Refresh runs button ──────────────────────────── */
-    document.getElementById('refresh-runs-btn').addEventListener('click', async () => {
+    async function refreshRunsWithFilters() {
         const btn = document.getElementById('refresh-runs-btn');
         btn.classList.add('loading');
         btn.disabled = true;
 
+        const searchValue = document.getElementById('run-search-input').value.trim();
+        const workflowValue = document.getElementById('run-workflow-input').value.trim();
+
         try {
-            const response = await fetch('/api/runs');
+            const query = new URLSearchParams();
+            if (searchValue) query.set('search', searchValue);
+            if (workflowValue) query.set('workflow_id', workflowValue);
+            const queryString = query.toString();
+            const response = await fetch(`/api/runs${queryString ? `?${queryString}` : ''}`);
             if (!response.ok) throw new Error(`Server responded with ${response.status}`);
             const runs = await response.json();
 
@@ -1221,6 +1273,44 @@
         } finally {
             btn.classList.remove('loading');
             btn.disabled = false;
+        }
+    }
+
+    document.getElementById('refresh-runs-btn').addEventListener('click', refreshRunsWithFilters);
+    document.getElementById('run-filter-apply').addEventListener('click', refreshRunsWithFilters);
+    document.getElementById('run-filter-clear').addEventListener('click', async () => {
+        document.getElementById('run-search-input').value = '';
+        document.getElementById('run-workflow-input').value = '';
+        await refreshRunsWithFilters();
+    });
+
+    document.getElementById('export-run-btn').addEventListener('click', async () => {
+        const activeRunBtn = document.querySelector('.run-card.active');
+        const runId = activeRunBtn ? activeRunBtn.getAttribute('data-run-id') : null;
+        if (!runId) {
+            showToast('No run selected', 'Select a run before exporting.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/runs/${runId}/export`);
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || `Server responded with ${response.status}`);
+            }
+            const data = await response.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `${runId}.json`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(url);
+            showToast('Run exported', `Saved ${runId}.json`, 'success');
+        } catch (err) {
+            showToast('Export failed', `${err.message || 'Could not export selected run.'}`);
         }
     });
 

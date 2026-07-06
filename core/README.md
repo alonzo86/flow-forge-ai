@@ -32,6 +32,7 @@ Install only the extras you need:
 pip install flow-forge-ai[openai-instr]    # OpenAI
 pip install flow-forge-ai[ollama-instr]    # Ollama
 pip install flow-forge-ai[httpx-instr]     # httpx
+pip install flow-forge-ai                  # Python logging (stdlib, no extra)
 ```
 
 ```bash
@@ -214,6 +215,19 @@ password = "env:FLOW_FORGE_DB_PASSWORD"
 | `flow_forge_ai.instrumentation.ollama_instr.OllamaInstrumentor` | `ollama` |
 | `flow_forge_ai.instrumentation.httpx_instr.HttpxInstrumentor` | `httpx` |
 | `flow_forge_ai.instrumentation.requests_instr.RequestsInstrumentor` | `requests` |
+| `flow_forge_ai.instrumentation.logging_instr.LoggingInstrumentor` | `logging` (stdlib) |
+
+`LoggingInstrumentor` options:
+
+```toml
+[[instrumentors]]
+class_path = "flow_forge_ai.instrumentation.logging_instr.LoggingInstrumentor"
+
+[instrumentors.options]
+min_level = "INFO"  # DEBUG | INFO | WARNING | ERROR | CRITICAL
+```
+
+When enabled, Python log records are emitted as `log.record` events and correlated with the active run context.
 
 ## Supported Sinks
 

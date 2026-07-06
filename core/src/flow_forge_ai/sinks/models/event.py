@@ -13,6 +13,7 @@ class EventType(StrEnum):
     LLM_REQUEST = "llm.request"
     LLM_RESPONSE = "llm.response"
     LLM_ERROR = "llm.error"
+    LOG_RECORD = "log.record"
     TOOL_START = "tool.start"
     TOOL_COMPLETED = "tool.completed"
     TOOL_ERROR = "tool.error"

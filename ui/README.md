@@ -14,6 +14,8 @@ Web UI for browsing and replaying [flow-forge-ai](../core/) workflow runs.
 
 - Connects to the runtime listener started by `flow-forge-ai`
 - Displays a list of recorded runs and their steps/events
+- Filters runs by search text, workflow ID, and pagination parameters
+- Exports a selected run as JSON (run metadata, steps, and flattened events)
 - Lets you trigger and monitor workflow replays from the browser
 
 ## Requirements
@@ -100,8 +102,9 @@ The UI itself is a thin FastAPI app that proxies requests to the core runtime li
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/` | Main UI page (HTML) |
-| `GET` | `/api/runs` | Proxy: list runs |
+| `GET` | `/api/runs` | Proxy: list runs (supports `search`, `run_id`, `workflow_id`, `limit`, `offset`, `started_after`, `started_before`) |
 | `GET` | `/api/steps` | Proxy: list steps for a run |
+| `GET` | `/api/runs/{run_id}/export` | Export run + steps + flattened events as JSON |
 | `POST` | `/api/runs/{run_id}/replay` | Proxy: start replay |
 | `GET` | `/api/runs/{run_id}/replay` | Proxy: get replay status |
 | `DELETE` | `/api/runs/{run_id}/replay` | Proxy: stop replay |

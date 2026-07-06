@@ -14,7 +14,8 @@ from flow_forge_ai.sinks.models.event import Event, EventType
 
 
 runs = [
-    Run(id="test-1", workflow_id="workflow_1"),
+    Run(id="run-1", workflow_id="workflow_1", started_at="2026-07-05T10:00:00+00:00"),
+    Run(id="run-2", workflow_id="workflow_2", started_at="2026-07-06T10:00:00+00:00"),
 ]
 step2_events = [
     Event(type=EventType.LLM_REQUEST, payload={"id": 2}, workflow_id="workflow_1", run_id="r1", trace_id="t1", span_id="s2", step_id="2"),
