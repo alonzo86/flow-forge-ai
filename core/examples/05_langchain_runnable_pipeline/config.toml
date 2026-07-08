@@ -3,6 +3,12 @@
 # Install dependencies:
 #   pip install flow-forge-ai[langchain-instr]
 
+[runtime]
+enabled = true
+source_sink = "file log"
+listener_host = "127.0.0.1"
+listener_port = 0
+
 [[instrumentors]]
 class_path = "flow_forge_ai.instrumentation.langchain_instr.LangChainInstrumentor"
 
