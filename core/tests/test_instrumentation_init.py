@@ -83,3 +83,13 @@ class TestCreateInstrumentor:
         result = create_instrumentor(cfg)
         assert isinstance(result, _StubInstrumentor)
         assert result.options == {}
+
+    def test_langchain_instrumentor_can_be_loaded(self):
+        cfg = InstrumentorConfig(
+            class_path="flow_forge_ai.instrumentation.langchain_instr.LangChainInstrumentor",
+            options={},
+        )
+        result = create_instrumentor(cfg)
+        from flow_forge_ai.instrumentation.langchain_instr import LangChainInstrumentor
+
+        assert isinstance(result, LangChainInstrumentor)

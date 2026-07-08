@@ -1,5 +1,5 @@
 [MASTER]
-ignore-paths=core/examples/.*|.*/examples/.*|core/tests/.*|.*/tests/.*
+ignore-paths=core/examples/.*|.*/examples/.*|core/tests/.*|.*/tests/.*|.*/\.venv/.*
 
 [MESSAGES CONTROL]
 disable=
@@ -11,6 +11,9 @@ disable=
     too-many-arguments,
     too-many-positional-arguments,
     import-outside-toplevel
+
+[DESIGN]
+max-returns=10
 
 [FORMAT]
 max-line-length=180

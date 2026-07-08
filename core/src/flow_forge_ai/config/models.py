@@ -54,8 +54,7 @@ class Config:
     def __post_init__(self) -> None:
         self.instrumentors = [InstrumentorConfig(**instr) if isinstance(instr, dict) else instr for instr in self.instrumentors]
         self.sinks = [SinkConfig(**sink) if isinstance(sink, dict) else sink for sink in self.sinks]
-        if isinstance(self.runtime, dict):
-            self.runtime = RuntimeListenerConfig(**self.runtime) # pylint: disable=not-a-mapping
+        self.runtime = RuntimeListenerConfig(**self.runtime) if isinstance(self.runtime, dict) else self.runtime # pylint: disable=not-a-mapping
 
     def to_dict(self) -> dict[str, Any]:
         """Convert Config dataclass to dictionary."""
