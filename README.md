@@ -22,7 +22,7 @@ Build, trace, and replay AI workflows with pluggable instrumentation and storage
 
 Flow Forge AI is a monorepo that provides end-to-end observability for AI workflows. It automatically traces LLM calls, tool invocations, and HTTP interactions into structured events, then lets you browse and replay them through a web UI.
 
-Recent additions include Python `logging` instrumentation (`log.record` events), run search/filter controls in the UI, and one-click run export as JSON.
+Recent additions include Python `logging` instrumentation (`log.record` events), LangChain runnable tracing, run search/filter controls in the UI, and one-click run export as JSON.
 
 ## Packages
 

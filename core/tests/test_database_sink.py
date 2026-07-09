@@ -64,6 +64,93 @@ def test_database_sink(mock_create_resource_handler):
     sink.close()
 
 @patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_flush_error_on_save_events(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.save_events.side_effect = Exception("Simulated save error")
+    sink = DatabaseSink(options={})
+
+    sink._buffer.append(Event(
+        type=EventType.RUN_START,
+        payload={"data": "value"},
+        workflow_id="workflow_1",
+        run_id="run_123",
+        trace_id="trace_456",
+        span_id="span_789",
+    ))
+    with pytest.raises(Exception, match="Simulated save error"):
+        sink.flush()
+
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_flush_error_on_handler_flush(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.flush.side_effect = Exception("Simulated flush error")
+    sink = DatabaseSink(options={})
+
+    with pytest.raises(Exception, match="Simulated flush error"):
+        sink.flush()
+
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_flush_unsafe_error(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.save_event.side_effect = Exception("Simulated save error")
+    sink = DatabaseSink(options={})
+
+    sink._flush_unsafe()  # Should not raise since buffer is empty
+
+    sink._buffer.append(Event(
+        type=EventType.RUN_START,
+        payload={"data": "value"},
+        workflow_id="workflow_1",
+        run_id="run_123",
+        trace_id="trace_456",
+        span_id="span_789",
+    ))
+    with pytest.raises(Exception, match="Simulated save error"):
+        sink._flush_unsafe()
+
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_close_error_on_save_events(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.save_events.return_value = None
+    sink = DatabaseSink(options={})
+
+    sink._buffer.append(Event(
+        type=EventType.RUN_START,
+        payload={"data": "value"},
+        workflow_id="workflow_1",
+        run_id="run_123",
+        trace_id="trace_456",
+        span_id="span_789",
+    ))
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_close_error_on_disconnect(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.disconnect.side_effect = Exception("Simulated disconnect error")
+    sink = DatabaseSink(options={})
+
+    sink._buffer.append(Event(
+        type=EventType.RUN_START,
+        payload={"data": "value"},
+        workflow_id="workflow_1",
+        run_id="run_123",
+        trace_id="trace_456",
+        span_id="span_789",
+    ))
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
+def test_database_sink_health_check_error_on_health_check(mock_create_resource_handler):
+    mock_create_resource_handler.return_value.health_check.side_effect = Exception("Simulated health_check error")
+    sink = DatabaseSink(options={})
+
+    assert not sink.health_check()
+
+    sink.close()
+
+@patch("flow_forge_ai.sinks.database_sink.create_resource_handler")
 def test_health_check(mock_create_resource_handler):
     handler = MockDatabaseHandler()
     mock_create_resource_handler.return_value = handler

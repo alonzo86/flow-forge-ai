@@ -22,5 +22,5 @@ def step_guard() -> Optional[Step]:
     increment_step()
     set_span_id(str(uuid.uuid4()))
     if runtime.replay_manager is None:
-        raise RuntimeError("Replay manager is not initialized")
+        return None
     return runtime.replay_manager.get_step(get_workflow_id(), get_step_id())

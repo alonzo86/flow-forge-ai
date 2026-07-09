@@ -137,14 +137,8 @@ class _RuntimeRequestHandler(BaseHTTPRequestHandler):
                 run_id=run_id,
                 start_step_id=raw_start_step_id,
             )
-        except json.JSONDecodeError as exc:
+        except Exception as exc:
             self.send_error(400, f"Bad request: {exc}")
-            return
-        except KeyError as exc:
-            self.send_error(404, str(exc))
-            return
-        except ValueError as exc:
-            self.send_error(409, str(exc))
             return
         self._send_json(202, replay_request.to_dict())
 

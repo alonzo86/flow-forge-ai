@@ -32,6 +32,7 @@ Install only the extras you need:
 pip install flow-forge-ai[openai-instr]    # OpenAI
 pip install flow-forge-ai[ollama-instr]    # Ollama
 pip install flow-forge-ai[httpx-instr]     # httpx
+pip install flow-forge-ai[langchain-instr] # LangChain
 pip install flow-forge-ai                  # Python logging (stdlib, no extra)
 ```
 
@@ -143,6 +144,7 @@ Examples live in [examples/](examples/):
 | [02_ollama_workflow_decorator](examples/02_ollama_workflow_decorator/example.py) | Ollama | SQLite |
 | [03_httpx_context_manager](examples/03_httpx_context_manager/example.py) | httpx | JSONL file |
 | [04_requests_workflow_decorator](examples/04_requests_workflow_decorator/example.py) | requests | JSONL file |
+| [05_langchain_runnable_pipeline](examples/05_langchain_runnable_pipeline/example.py) | LangChain | JSONL file |
 
 ```bash
 cd examples/02_ollama_workflow_decorator
@@ -215,6 +217,7 @@ password = "env:FLOW_FORGE_DB_PASSWORD"
 | `flow_forge_ai.instrumentation.ollama_instr.OllamaInstrumentor` | `ollama` |
 | `flow_forge_ai.instrumentation.httpx_instr.HttpxInstrumentor` | `httpx` |
 | `flow_forge_ai.instrumentation.requests_instr.RequestsInstrumentor` | `requests` |
+| `flow_forge_ai.instrumentation.langchain_instr.LangChainInstrumentor` | `langchain_core` / `langchain` |
 | `flow_forge_ai.instrumentation.logging_instr.LoggingInstrumentor` | `logging` (stdlib) |
 
 `LoggingInstrumentor` options:

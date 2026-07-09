@@ -8,6 +8,7 @@ Runnable end-to-end examples live in [`core/examples/`](https://github.com/alonz
 | `02_ollama_workflow_decorator` | Ollama | SQLite |
 | `03_httpx_context_manager` | httpx | JSONL file |
 | `04_requests_workflow_decorator` | requests | JSONL file |
+| `05_langchain_runnable_pipeline` | LangChain | JSONL file |
 
 All examples are run from the example directory so `config.toml` is picked up automatically:
 
@@ -142,4 +143,41 @@ pip install flow-forge-ai
 ```bash
 cd core/examples/04_requests_workflow_decorator
 python example.py
+```
+
+---
+
+## 05 — LangChain runnable pipeline
+
+Demonstrates automatic tracing of LangChain `Runnable.invoke()` calls using a simple `RunnableLambda` pipeline and the `with runtime.run()` context manager.
+
+**Install**
+
+```bash
+pip install flow-forge-ai[langchain-instr]
+```
+
+**Run**
+
+```bash
+cd core/examples/05_langchain_runnable_pipeline
+python example.py
+```
+
+**Key snippet**
+
+```python
+from langchain_core.runnables import RunnableLambda
+from flow_forge_ai.runtime import runtime
+
+def lookup_topic(topic: str) -> dict[str, str]:
+    return {"topic": topic, "fact": "LangChain provides composable building blocks."}
+
+def format_brief(topic_context: dict[str, str]) -> str:
+    return f"Topic: {topic_context['topic']}\nBrief: {topic_context['fact']}"
+
+chain = RunnableLambda(lookup_topic) | RunnableLambda(format_brief)
+
+with runtime.run(workflow="langchain-brief-generator"):
+    print(chain.invoke("langchain"))
 ```

@@ -36,3 +36,5 @@ stdout
 injectable
 replayable
 httpx
+runnables
+stdlib

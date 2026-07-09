@@ -100,3 +100,15 @@ class MockDatabaseHandler(ResourceHandler):
 
     def health_check(self) -> bool:
         return self.connected
+
+
+class StringContaining:
+    """A helper class to check if a string contains a substring."""
+    def __init__(self, substring):
+        self.substring = substring
+
+    def __eq__(self, other):
+        return isinstance(other, str) and self.substring in other
+
+    def __repr__(self):
+        return f"<StringContaining: '{self.substring}'>"

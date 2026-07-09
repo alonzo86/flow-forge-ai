@@ -6,7 +6,7 @@ from flow_forge_ai.replay import _ReplayRequest
 from flow_forge_ai.runtime import _Runtime, _RuntimeListener, _RuntimeRequestHandler
 from flow_forge_ai.sinks.memory_sink import MemorySink
 import pytest
-from conftest import runs, steps
+from conftest import StringContaining, runs, steps
 
 
 @pytest.fixture
@@ -15,6 +15,7 @@ def mock_runtime_owner():
     runtime_mock.replay_manager = Mock()
     runtime_mock.replay_manager.list_runs.return_value = runs
     runtime_mock.replay_manager.list_steps.return_value = steps
+    runtime_mock.replay_manager.request_replay.side_effect = lambda run_id, start_step_id: _ReplayRequest(workflow_id="workflow_1", run_id=run_id, start_step_id=start_step_id)
     runtime_mock.replay_manager.get_replay_request.return_value = _ReplayRequest(workflow_id="workflow_1", run_id="r1", start_step_id=steps[0].id)
     runtime_mock.replay_manager.get_step.side_effect = lambda workflow_id, step_id: next((step for step in steps if step.id == step_id), None)
     return runtime_mock
@@ -157,3 +158,25 @@ class TestRuntimeRequestHandler:
              patch.object(handler, 'wfile', new_callable=BytesIO) as mock_wfile:
             handler.do_DELETE()
             mock_send_json.assert_called_once_with(202, expected_response)
+
+    def test_do_POST_api_replay_with_body(self, mock_server):
+        request_mock = Mock()
+        body = json.dumps({"start_step_id": "step-2"}).encode('utf-8')
+        raw_http = b"POST /api/runs/r1/replay HTTP/1.1\r\nHost: localhost\r\nContent-Length: %d\r\n\r\n%s" % (len(body), body)
+        expected_response = _ReplayRequest(workflow_id="workflow_1", run_id="r1", start_step_id="step-2").to_dict()
+        rfile = BytesIO(raw_http)
+        request_mock.makefile.return_value = rfile
+
+        with patch.object(_RuntimeRequestHandler, '_send_json') as mock_send_json:
+            handler = _RuntimeRequestHandler(request=request_mock, client_address=None, server=mock_server.return_value)
+            mock_send_json.assert_called_once_with(202, expected_response)
+    
+    def test_do_POST_api_replay_invalid_json(self, mock_server):
+        request_mock = Mock()
+        body = b"{invalid_json}"
+        raw_http = b"POST /api/runs/r1/replay HTTP/1.1\r\nHost: localhost\r\nContent-Length: %d\r\n\r\n%s" % (len(body), body)
+        rfile = BytesIO(raw_http)
+        request_mock.makefile.return_value = rfile
+        with patch.object(_RuntimeRequestHandler, 'send_error') as mock_send_error:
+            handler = _RuntimeRequestHandler(request=request_mock, client_address=None, server=mock_server.return_value)
+            mock_send_error.assert_called_once_with(400, StringContaining("Expecting property name enclosed in double quotes"))
