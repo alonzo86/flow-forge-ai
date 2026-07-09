@@ -1,6 +1,16 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "core/**"
+      - "ui/**"
+      - ".pylintdict"
+      - ".pylintrc"
+      - ".mypy.ini"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - main
