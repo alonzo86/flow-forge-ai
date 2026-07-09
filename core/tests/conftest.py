@@ -1,5 +1,6 @@
 from typing import List, Optional
 from enum import Enum
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from flow_forge_ai.runtime import RunStartPayload
@@ -112,3 +113,25 @@ class StringContaining:
 
     def __repr__(self):
         return f"<StringContaining: '{self.substring}'>"
+
+
+def pytest_collection_modifyitems(items):
+    """Apply test-level markers from directory layout.
+
+    tests/e2e/** -> e2e
+    tests/integration/** -> integration
+    tests/*.py -> unit
+    """
+    for item in items:
+        item_path = Path(str(getattr(item, "path", item.fspath))).as_posix()
+
+        if "/tests/e2e/" in item_path:
+            item.add_marker(pytest.mark.e2e)
+            continue
+
+        if "/tests/integration/" in item_path:
+            item.add_marker(pytest.mark.integration)
+            continue
+
+        if "/tests/" in item_path:
+            item.add_marker(pytest.mark.unit)

@@ -46,8 +46,14 @@ jobs:
           uv pip install -e ./ui
           uv pip install -e "core[httpx-instr,openai-instr,ollama-instr,langchain-instr,postgres-sink,mongodb-sink,mysql-sink,sqlite-sink,ui,dev]"
 
-      - name: Run core tests with coverage
-        run: COVERAGE_FILE=.coverage.core uv run pytest --rootdir=core --cov=flow_forge_ai core/tests
+      - name: Run core unit tests with coverage
+        run: COVERAGE_FILE=.coverage.core uv run pytest --rootdir=core --cov=flow_forge_ai -m unit core/tests
+
+      - name: Run core integration tests with coverage
+        run: COVERAGE_FILE=.coverage.core uv run pytest --rootdir=core --cov=flow_forge_ai --cov-append -m integration core/tests
+
+      - name: Run core e2e tests with coverage
+        run: COVERAGE_FILE=.coverage.core uv run pytest --rootdir=core --cov=flow_forge_ai --cov-append -m e2e core/tests
 
       - name: Run ui tests with coverage
         run: COVERAGE_FILE=.coverage.ui uv run pytest --rootdir=ui --cov=flow_forge_ai_ui --cov=flow_forge_ai ui/tests

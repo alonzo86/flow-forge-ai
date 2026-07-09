@@ -113,3 +113,8 @@ flow_forge_ai = [
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
 testpaths = ["tests"]
+markers = [
+    "unit: isolated unit tests",
+    "integration: tests that validate interactions across components",
+    "e2e: end-to-end tests that exercise full workflows via public/runtime interfaces",
+]

@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import sys
 import types
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
-from flow_forge_ai.instrumentation.langchain_instr import LangChainInstrumentor
+from flow_forge_ai.instrumentation.langchain_instr import LangChainInstrumentor, _serialize_payload
 from flow_forge_ai.runtime import _Runtime
 from flow_forge_ai.sinks.memory_sink import MemorySink
 from flow_forge_ai.sinks.models.event import EventType
@@ -135,3 +135,50 @@ class TestLangChainInstrumentor:
         assert len(error_events) == 1
         assert error_events[0].payload["provider"] == "langchain"
         assert error_events[0].payload["error"] == "RuntimeError"
+    
+    def test_build_cached_response_returns_response_from_step(self):
+        instr = LangChainInstrumentor()
+        step = MagicMock()
+        response_event = MagicMock()
+        response_event.type = EventType.LLM_RESPONSE
+        response_event.payload = {
+            "response": {"result": "cached"}
+        }
+        step.events = [response_event]
+        cached_response = instr._build_cached_response(step)
+        assert cached_response == {"result": "cached"}
+
+    def test_serialize_payload_handles_various_types(self):
+        model_dump_payload = MagicMock()
+        model_dump_payload.model_dump.return_value = {"mocked": "data"}
+        del model_dump_payload.dict  # Ensure dict method does not exist
+        dict_payload = MagicMock()
+        dict_payload.dict.return_value = {"mocked": "data"}
+        del dict_payload.model_dump  # Ensure model_dump method does not exist
+        payloads = [
+            ("string", "string"),
+            (123, 123),
+            (45.67, 45.67),
+            (True, True),
+            (None, None),
+            ({"key": "value"}, {"key": "value"}),
+            ([1, 2, 3], [1, 2, 3]),
+            (model_dump_payload, {"mocked": "data"}),
+            (dict_payload, {"mocked": "data"}),
+        ]
+        for payload, expected in payloads:
+            serialized = _serialize_payload(payload)
+            assert serialized == expected
+
+        model_dump_payload.model_dump.side_effect = Exception("model_dump error")
+        model_dump_payload.__str__.return_value = "model_dump error"
+        dict_payload.dict.side_effect = Exception("dict error")
+        dict_payload.__str__.return_value = "dict error"
+        assert _serialize_payload(model_dump_payload) == "model_dump error"
+        assert _serialize_payload(dict_payload) == "dict error"
+
+        unsupported_obj = MagicMock()
+        del unsupported_obj.model_dump  # Ensure model_dump method does not exist
+        del unsupported_obj.dict  # Ensure dict method does not exist
+        unsupported_obj.__str__.return_value = "unsupported object"
+        assert _serialize_payload(unsupported_obj) == "unsupported object"
